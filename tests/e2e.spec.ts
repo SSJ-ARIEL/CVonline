@@ -1,0 +1,384 @@
+import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { unzipSync, strFromU8 } from 'fflate';
+import { es } from '../src/locales/es';
+import { en } from '../src/locales/en';
+import { it } from '../src/locales/it';
+import { pt } from '../src/locales/pt';
+
+const dictionaries = { es, en, it, pt };
+type Locale = keyof typeof dictionaries;
+const languageNames = { es: 'Español', en: 'English', it: 'Italiano', pt: 'Português' };
+const fullName = 'María Ñúñez Çavalli';
+const description = 'Diseño accesible, comunicação clara y investigación de usuarios.';
+
+function field(page: Page, label: string) {
+  // Optional labels include a translated "optional" suffix.
+  return page.getByLabel(label, { exact: false }).filter({ visible: true }).first();
+}
+
+async function start(page: Page, locale: Locale = 'es') {
+  const copy = dictionaries[locale];
+  await page.goto('/language');
+  await page.locator('.language-card').filter({ hasText: languageNames[locale] }).click();
+  await page.getByRole('button', { name: copy.languageAction, exact: true }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+  await page.getByRole('button', { name: new RegExp(copy.profileFirst) }).click();
+  await page.getByRole('button', { name: copy.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/personal$/);
+}
+
+async function personal(page: Page, locale: Locale = 'es') {
+  const copy = dictionaries[locale];
+  await field(page, copy.name).fill(fullName);
+  await field(page, copy.headline).fill('Diseñadora de producto');
+  await field(page, copy.email).fill('maria.private@example.com');
+  await field(page, copy.city).fill('São Paulo');
+}
+
+async function finish(page: Page, locale: Locale = 'es', summary = description) {
+  const copy = dictionaries[locale];
+  await page.getByRole('button', { name: copy.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/experience$/);
+  await expect(page.getByRole('heading', { name: copy.experienceFirstTitle, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: copy.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/education$/);
+  await page.getByRole('button', { name: copy.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/skills$/);
+  await page.getByPlaceholder(copy.skillsPlaceholder).fill('Investigación, Acessibilidade, Design');
+  await page.getByPlaceholder(copy.skillsPlaceholder).press('Enter');
+  await expect(page.locator('.skill-tag')).toHaveCount(3);
+  await page.getByRole('button', { name: copy.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/summary$/);
+  await field(page, copy.summary).fill(summary);
+  await page.getByRole('button', { name: copy.finish, exact: true }).click();
+  await expect(page).toHaveURL(/\/templates$/);
+  await expect(page.locator('.template-card')).toHaveCount(17);
+  await expect(page.locator('.catalog-note')).toHaveText(copy.templatesYourData);
+  await page.locator('.template-preview-button').first().click();
+  await expect(page).toHaveURL(/\/review$/);
+  await expect(page.locator('.preview-viewport .resume-page')).toContainText(fullName);
+  await expect(page.locator('.preview-viewport .resume-page')).toContainText(summary);
+}
+
+async function photoFixture(page: Page, mimeType: 'image/png' | 'image/jpeg' | 'image/webp') {
+  const uri = await page.evaluate((type) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 50;
+    const context = canvas.getContext('2d')!;
+    context.fillStyle = '#26ddd8';
+    context.fillRect(0, 0, 40, 50);
+    context.fillStyle = '#222b34';
+    context.fillRect(10, 10, 20, 20);
+    return canvas.toDataURL(type);
+  }, mimeType);
+  return { name: `profile.${mimeType === 'image/jpeg' ? 'jpg' : mimeType.slice(6)}`, mimeType, buffer: Buffer.from(uri.split(',')[1], 'base64') };
+}
+
+async function getDownload(page: Page, label: string, fileName: string, testInfo: TestInfo) {
+  const pending = page.waitForEvent('download', { timeout: 40_000 });
+  await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
+  const download = await pending;
+  expect(await download.failure()).toBeNull();
+  const output = testInfo.outputPath(fileName);
+  await download.saveAs(output);
+  return output;
+}
+
+for (const locale of ['es', 'en', 'it', 'pt'] as const) {
+  test(`complete questionnaire and editable Word in ${locale}`, async ({ page }, testInfo) => {
+    const copy = dictionaries[locale];
+    await start(page, locale);
+    await personal(page, locale);
+    await finish(page, locale);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    await expect(page.locator('.preview-viewport article')).toHaveAttribute('lang', locale);
+    await expect(page.getByRole('heading', { name: copy.reviewTitle, exact: true })).toBeVisible();
+    if (locale === 'es') await page.screenshot({ path: '/tmp/cvonline-review.png', fullPage: true });
+    const downloaded = await getDownload(page, copy.downloadWord, `cv-${locale}.docx`, testInfo);
+    const docx = unzipSync(await readFile(downloaded));
+    const xml = strFromU8(docx['word/document.xml']);
+    expect(xml).toContain(fullName);
+    expect(xml).toContain(description);
+    expect(xml).toContain(copy.summary);
+    expect(xml).toContain('<w:t');
+  });
+}
+
+test('required name, malformed contacts and chronological dates stop navigation', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText(es.errorName);
+  await expect(field(page, es.name)).toBeFocused();
+  await personal(page);
+  await field(page, es.email).fill('invalid@email');
+  await field(page, es.website).fill('javascript:alert(1)');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText([es.errorEmail, es.errorUrl]);
+  await expect(page).toHaveURL(/\/builder\/personal$/);
+  await field(page, es.email).fill('maria@example.com');
+  await field(page, es.website).fill('https://example.com');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.addExperience, exact: true }).click();
+  await field(page, es.role).fill('Diseñadora');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText(es.errorEntry);
+  await field(page, es.company).fill('Estudio Ç');
+  await field(page, es.startDate).fill('2024-10');
+  await field(page, es.endDate).fill('2023-05');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText(es.errorDates);
+  await expect(page).toHaveURL(/\/builder\/experience$/);
+  await page.getByRole('checkbox', { name: es.currentJob, exact: true }).check();
+  await expect(field(page, es.endDate)).toBeDisabled();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/education$/);
+  await page.getByRole('button', { name: es.addEducation, exact: true }).click();
+  await field(page, es.degree).fill('Diseño');
+  await field(page, es.institution).fill('Universidad');
+  await field(page, es.startDate).fill('2022-09');
+  await field(page, es.endDate).fill('2021-06');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText(es.errorDates);
+  await field(page, es.endDate).fill('2025-06');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/skills$/);
+});
+
+test('PNG, JPEG and WebP photos are processed locally; invalid files are rejected', async ({ page }) => {
+  const sent: string[] = [];
+  page.on('request', request => {
+    if (request.method() !== 'GET' || !request.url().startsWith('http://127.0.0.1:5173')) sent.push(request.url());
+  });
+  await start(page);
+  for (const mime of ['image/png', 'image/jpeg', 'image/webp'] as const) {
+    await page.locator('#photo-input').setInputFiles(await photoFixture(page, mime));
+    const photo = page.locator('.photo-uploader img');
+    await expect(photo).toBeVisible();
+    await expect(photo).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
+    expect(await photo.evaluate(image => (image as HTMLImageElement).naturalWidth)).toBe(40);
+    await page.getByRole('button', { name: es.photoRemove, exact: true }).click();
+    await expect(photo).toHaveCount(0);
+  }
+  await page.locator('#photo-input').setInputFiles({ name: 'document.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7 invalid photo') });
+  await expect(page.getByRole('alert')).toHaveText(es.photoError);
+  await page.locator('#photo-input').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('invalid image bytes') });
+  await expect(page.getByRole('alert')).toHaveText(es.photoError);
+  await expect(page.locator('.photo-uploader img')).toHaveCount(0);
+  expect(sent).toEqual([]);
+});
+
+test('PDF and Word retain Unicode, photo, long text and configurable page size', async ({ page }, testInfo) => {
+  test.setTimeout(100_000);
+  await start(page);
+  await personal(page);
+  await page.locator('#photo-input').setInputFiles(await photoFixture(page, 'image/png'));
+  await expect(page.locator('.photo-uploader img')).toBeVisible();
+  const longSummary = `${description}\n${Array.from({ length: 65 }, (_, index) => `Proyecto ${index + 1}: investigación, diseño y comunicación con el equipo.`).join('\n')}\nÚltimo resultado: São Paulo, año 2026.`;
+  await finish(page, 'es', longSummary);
+  await page.locator('#paper-size').selectOption('LETTER');
+  await expect(page.locator('.preview-viewport article')).toHaveClass(/resume-paper-letter/);
+  await page.screenshot({ path: '/tmp/cvonline-long-review.png', fullPage: true });
+  const pdfPath = await getDownload(page, es.downloadPdf, 'resume-unicode.pdf', testInfo);
+  const pdfBytes = await readFile(pdfPath);
+  expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
+  const text = execFileSync('pdftotext', [pdfPath, '-'], { encoding: 'utf8' });
+  expect(text).toContain(fullName);
+  expect(text).toContain('comunicação');
+  expect(text).toContain('Último resultado: São Paulo, año 2026.');
+  const info = execFileSync('pdfinfo', [pdfPath], { encoding: 'utf8' });
+  expect(info).toMatch(/Page size:\s+612 x 792 pts/);
+  expect(Number(/Pages:\s+(\d+)/.exec(info)?.[1])).toBeGreaterThan(1);
+  const images = execFileSync('pdfimages', ['-list', pdfPath], { encoding: 'utf8' });
+  expect(images).toMatch(/\bimage\b/);
+  // Two-column PDFs must retain both long main content and the side column.
+  await page.locator('#review-template').selectOption('prism');
+  const twoColumnPdf = await getDownload(page, es.downloadPdf, 'resume-two-columns.pdf', testInfo);
+  const twoColumnText = execFileSync('pdftotext', [twoColumnPdf, '-'], { encoding: 'utf8' });
+  expect(twoColumnText).toContain(fullName);
+  expect(twoColumnText).toContain('Último resultado: São Paulo, año 2026.');
+  expect(twoColumnText).toContain('Acessibilidade');
+  expect(twoColumnText).toContain('maria.private@example.com');
+  const docxPath = await getDownload(page, es.downloadWord, 'resume-unicode.docx', testInfo);
+  const files = unzipSync(await readFile(docxPath));
+  const xml = strFromU8(files['word/document.xml']);
+  expect(xml).toContain(fullName);
+  expect(xml).toContain('Último resultado: São Paulo, año 2026.');
+  expect(xml).toContain('<w:t');
+  expect(xml).toContain('<w:drawing>');
+  expect(xml).toContain('w:w="12240"');
+  expect(Object.keys(files).filter(name => /^word\/media\/.*\.(?:jpg|png)$/.test(name))).toHaveLength(1);
+  await page.getByRole('checkbox', { name: es.photoShow, exact: true }).uncheck();
+  await expect(page.locator('.preview-viewport .resume-photo')).toHaveCount(0);
+  const noPhoto = unzipSync(await readFile(await getDownload(page, es.downloadWord, 'resume-no-photo.docx', testInfo)));
+  expect(strFromU8(noPhoto['word/document.xml'])).not.toContain('<w:drawing>');
+});
+
+test('answers stay in memory across steps, never leave the browser and disappear on reload/reset', async ({ page }) => {
+  const requests: { url: string; body: string | null; method: string }[] = [];
+  const errors: string[] = [];
+  page.on('request', request => requests.push({ url: request.url(), body: request.postData(), method: request.method() }));
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('dialog', dialog => dialog.accept());
+  await start(page);
+  await personal(page);
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('link', { name: es.back, exact: true }).click();
+  await expect(field(page, es.name)).toHaveValue(fullName);
+  await expect(field(page, es.email)).toHaveValue('maria.private@example.com');
+  await finish(page);
+  const browserStorage = await page.evaluate(async () => ({ local: localStorage.length, session: sessionStorage.length, cookies: document.cookie, databases: (await indexedDB.databases()).map(database => database.name) }));
+  expect(browserStorage).toEqual({ local: 0, session: 0, cookies: '', databases: [] });
+  await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
+  expect(requests.filter(request => !request.url.startsWith('http://127.0.0.1:5173'))).toEqual([]);
+  expect(requests.filter(request => request.method !== 'GET')).toEqual([]);
+  for (const request of requests) {
+    expect(`${request.url} ${request.body ?? ''}`).not.toContain('maria.private');
+    expect(`${request.url} ${request.body ?? ''}`).not.toContain(fullName);
+  }
+  expect(errors).toEqual([]);
+  await page.reload();
+  await expect(page).toHaveURL(/\/language$/);
+  await start(page);
+  await personal(page);
+  await finish(page);
+  await page.getByRole('button', { name: es.startOver, exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: es.cancel, exact: true }).click();
+  await expect(page.locator('.preview-viewport')).toContainText(fullName);
+  await page.getByRole('button', { name: es.startOver, exact: true }).click();
+  await page.getByRole('button', { name: es.resetConfirm, exact: true }).click();
+  await expect(page).toHaveURL(/\/language$/);
+  await page.getByRole('button', { name: es.languageAction, exact: true }).click();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(field(page, es.name)).toHaveValue('');
+});
+
+test('all 17 designs, family filters and public information are reachable', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu experiencia');
+  await page.screenshot({ path: '/tmp/cvonline-final-desktop.png', fullPage: true });
+  await page.getByRole('link', { name: es.navTemplates, exact: true }).click();
+  await expect(page.locator('.template-card')).toHaveCount(17);
+  const expectedFamilies: [string, number][] = [[es.familyClassic, 3], [es.familyModern, 4], [es.familyExecutive, 3], [es.familyTechnical, 2], [es.familyCreative, 3], [es.familyAcademic, 2]];
+  for (const [family, count] of expectedFamilies) {
+    await page.getByRole('button', { name: family, exact: true }).click();
+    await expect(page.locator('.template-card')).toHaveCount(count);
+    await expect(page.locator('.template-count')).toHaveText(`${count} diseños`);
+  }
+  await page.getByRole('button', { name: es.templateAll, exact: true }).click();
+  await expect(page.locator('.resume-page')).toHaveCount(17);
+  await expect(page.locator('.catalog-note')).toHaveText(es.templatesSample);
+  await page.getByRole('link', { name: es.navHow, exact: true }).click();
+  await expect(page.locator('.how-card')).toHaveCount(3);
+  await page.getByRole('link', { name: es.navGuides, exact: true }).click();
+  expect(await page.locator('.article-card').count()).toBeGreaterThanOrEqual(6);
+  await page.locator('.article-card').first().click();
+  expect((await page.locator('.article-body').innerText()).length).toBeGreaterThan(1000);
+  for (const label of [es.footerPrivacy, es.footerTerms, es.footerAbout]) {
+    await page.getByRole('link', { name: label, exact: true }).click();
+    await expect(page.locator('.article-body')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  }
+  await page.locator('#interface-language').selectOption('pt');
+  await expect(page).toHaveURL(/\/pt\/about$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'pt');
+});
+
+test('mobile 390px supports the full flow and every template without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const noOverflow = async () => {
+    const widths = await page.evaluate(() => ({ viewport: innerWidth, body: document.documentElement.scrollWidth }));
+    expect(widths.body).toBeLessThanOrEqual(widths.viewport + 1);
+  };
+  await page.goto('/');
+  await noOverflow();
+  await page.screenshot({ path: '/tmp/cvonline-final-mobile.png', fullPage: true });
+  await start(page);
+  await noOverflow();
+  await personal(page);
+  await finish(page);
+  await noOverflow();
+  const options = await page.locator('#review-template option').evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value));
+  expect(options).toHaveLength(17);
+  for (const value of options) {
+    await page.locator('#review-template').selectOption(value);
+    await expect(page.locator('.preview-viewport article')).toContainText(fullName);
+    await noOverflow();
+  }
+  await page.screenshot({ path: '/tmp/cvonline-review-mobile.png', fullPage: true });
+});
+
+test('translation rejects identical languages without changing answers', async ({ page }) => {
+  await start(page);
+  await personal(page);
+  await finish(page);
+  await page.locator('.translation-panel summary').click();
+  await page.getByRole('button', { name: es.translateAction, exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText(es.translateSame);
+  await expect(page.locator('.preview-viewport article')).toContainText(description);
+  await expect(page.locator('.preview-viewport article')).toContainText('maria.private@example.com');
+});
+
+async function reachSkills(page: Page) {
+  await start(page);
+  await personal(page);
+  for (const step of ['experience', 'education', 'skills']) {
+    await page.getByRole('button', { name: es.next, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/builder/${step}$`));
+  }
+}
+
+test('continuing keeps skills and interests typed without pressing Enter', async ({ page }) => {
+  await reachSkills(page);
+  const skills = page.getByPlaceholder(es.skillsPlaceholder);
+  await skills.fill('TypeScript, Comunicación');
+  await skills.press('Enter');
+  await skills.fill('Diseño UX, TypeScript, , Comunicación');
+  await page.getByPlaceholder(es.interestsPlaceholder).fill('Fotografía, Música, Fotografía');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/summary$/);
+  await page.getByRole('button', { name: es.summaryGenerate, exact: true }).click();
+  await expect(field(page, es.summary)).toHaveValue(/TypeScript, Comunicación, Diseño UX/);
+  await page.getByRole('link', { name: es.back, exact: true }).click();
+  await expect(page.locator('.skill-tag')).toHaveCount(5);
+  await expect(skills).toHaveValue('');
+  await expect(page.getByPlaceholder(es.interestsPlaceholder)).toHaveValue('');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.finish, exact: true }).click();
+  await page.locator('.template-preview-button').first().click();
+  await expect(page).toHaveURL(/\/review$/);
+  await expect(page.locator('.preview-viewport .resume-section-skills .resume-tags span')).toHaveText(['TypeScript', 'Comunicación', 'Diseño UX']);
+  await expect(page.locator('.preview-viewport .resume-section-interests .resume-tags span')).toHaveText(['Fotografía', 'Música']);
+});
+
+test('partial custom sections show missing fields and preserve content until completed', async ({ page }) => {
+  await reachSkills(page);
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.addCustom, exact: true }).click();
+  await page.getByLabel(es.customTitle, { exact: true }).first().fill('Premios');
+  await page.getByRole('button', { name: es.addCustom, exact: true }).click();
+  await page.getByLabel(es.customBody, { exact: true }).nth(1).fill('Ponencia sobre diseño accesible');
+  await page.getByRole('button', { name: es.addCustom, exact: true }).click();
+  await page.getByRole('button', { name: es.finish, exact: true }).click();
+  await expect(page).toHaveURL(/\/builder\/summary$/);
+  await expect(page.getByRole('alert')).toHaveText([es.required, es.required]);
+  await expect(page.getByLabel(es.customBody, { exact: true }).first()).toBeFocused();
+  await expect(page.getByLabel(es.customTitle, { exact: true }).first()).toHaveValue('Premios');
+  await expect(page.getByLabel(es.customBody, { exact: true }).nth(1)).toHaveValue('Ponencia sobre diseño accesible');
+  await page.getByLabel(es.customBody, { exact: true }).first().fill('Premio de diseño 2026');
+  await page.getByLabel(es.customTitle, { exact: true }).nth(1).fill('Publicaciones');
+  await page.getByRole('button', { name: es.finish, exact: true }).click();
+  await page.locator('.template-preview-button').first().click();
+  await expect(page).toHaveURL(/\/review$/);
+  const resume = page.locator('.preview-viewport article');
+  await expect(resume).toContainText('Premios');
+  await expect(resume).toContainText('Premio de diseño 2026');
+  await expect(resume).toContainText('Publicaciones');
+  await expect(resume).toContainText('Ponencia sobre diseño accesible');
+  await page.getByRole('link', { name: es.editAnswers, exact: true }).click();
+  await page.locator('.flow-progress').getByRole('link', { name: /Tu presentación/ }).click();
+  await expect(page.locator('.entry-card')).toHaveCount(2);
+});

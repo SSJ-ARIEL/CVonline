@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /builder/
+Disallow: /review
+Disallow: /profile
+Disallow: /language

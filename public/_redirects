@@ -1,0 +1,3 @@
+# Cloudflare Pages serves existing files first and supplies SPA fallback when
+# no top-level 404.html exists. No catch-all rewrite: it would override the
+# prerendered public pages and even JavaScript, fonts and WebAssembly assets.
