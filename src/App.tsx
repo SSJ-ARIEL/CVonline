@@ -11,12 +11,14 @@ import { LanguagePage, ProfilePage, WizardPage } from './Wizard';
 import { ReviewPage } from './Review';
 import { Advertising } from './Advertising';
 import { StartLink } from './components/UI';
+import { CvTypePage } from './CvTypePage';
 
 export function stripLocale(path:string) { return path.replace(/^\/(?:es|en|it|pt)(?=\/|$)/,'')||'/'; }
+export function isEditorRoute(path:string,search='') {return ['/language','/cv-type','/profile','/review'].includes(path)||path.startsWith('/builder')||(path==='/templates'&&new URLSearchParams(search).get('step')==='design');}
 export function pageTitle(path:string,locale:Locale) {
   const route=stripLocale(path);const guide=route.startsWith('/guides/')?getGuides(locale).find(g=>g.slug===route.slice(8)):undefined;
   if(guide)return `${guide.title} — CVonline`;
-  const key=route==='/templates'?'navTemplates':route==='/guides'?'navGuides':route==='/privacy'?'footerPrivacy':route==='/terms'?'footerTerms':route==='/about'?'footerAbout':route==='/how-it-works'?'navHow':route==='/review'?'reviewTitle':route==='/language'?'languageTitle':route==='/profile'?'profileTitle':'brandTag';
+  const key=route==='/templates'?'navTemplates':route==='/guides'?'navGuides':route==='/privacy'?'footerPrivacy':route==='/terms'?'footerTerms':route==='/about'?'footerAbout':route==='/how-it-works'?'navHow':route==='/review'?'reviewTitle':route==='/language'?'languageTitle':route==='/cv-type'?'cvTypeTitle':route==='/profile'?'profileTitle':'brandTag';
   return `CVonline — ${t(locale,key)}`;
 }
 function RouteEffects() {
@@ -28,13 +30,13 @@ function RouteEffects() {
   return null;
 }
 function Header() {
-  const {locale,setLocale}=useResume();const location=useLocation();const navigate=useNavigate();const editor=['/language','/profile','/review'].includes(location.pathname)||location.pathname.startsWith('/builder');
+  const {locale,setLocale}=useResume();const location=useLocation();const navigate=useNavigate();const editor=isEditorRoute(location.pathname,location.search);
   const changeLocale=(value:Locale)=>{setLocale(value);if(!editor)navigate(publicPath(stripLocale(location.pathname),value));};
   return <header className="site-header"><Link className="wordmark" to={publicPath('/',locale)} aria-label="CVonline"><span className="brand-mark"><FileText size={20}/></span><span>CV<span className="wordmark-light">online</span><i/></span></Link><nav className="header-nav" aria-label={t(locale,'home')}><Link to={publicPath('/templates',locale)}>{t(locale,'navTemplates')}</Link><Link to={publicPath('/how-it-works',locale)}>{t(locale,'navHow')}</Link><Link to={publicPath('/guides',locale)}>{t(locale,'navGuides')}</Link></nav><div className="header-actions"><label className="visually-hidden" htmlFor="interface-language">{t(locale,'languageName')}</label><select id="interface-language" className="language-switch" value={locale} onChange={event=>changeLocale(event.target.value as Locale)}>{LOCALES.map(language=><option key={language.code} value={language.code}>{language.short}</option>)}</select>{!editor&&<StartLink className="button secondary header-action">{t(locale,'navStart')}<ArrowUpRight size={15}/></StartLink>}</div></header>;
 }
 function Footer() { const {locale}=useResume();return <footer className="site-footer"><span>© {new Date().getFullYear()} CVonline <span className="footer-note">— {t(locale,'footerNote')}</span></span><nav className="footer-links" aria-label={t(locale,'footerAbout')}><Link to={publicPath('/about',locale)}>{t(locale,'footerAbout')}</Link><Link to={publicPath('/privacy',locale)}>{t(locale,'footerPrivacy')}</Link><Link to={publicPath('/terms',locale)}>{t(locale,'footerTerms')}</Link></nav></footer>; }
 export default function App() {
-  const {locale}=useResume();const location=useLocation();const editor=['/language','/profile','/review'].includes(location.pathname)||location.pathname.startsWith('/builder');
+  const {locale}=useResume();const location=useLocation();const editor=isEditorRoute(location.pathname,location.search);
   const publicRoutes=['',...LOCALES.map(language=>`/${language.code}`)].flatMap(prefix=>[
     <Route key={`${prefix}/`} path={prefix||'/'} element={<Landing/>}/>,
     <Route key={`${prefix}/templates`} path={`${prefix}/templates`} element={<TemplatesPage/>}/>,
@@ -43,5 +45,5 @@ export default function App() {
     <Route key={`${prefix}/guides/:slug`} path={`${prefix}/guides/:slug`} element={<GuidePage/>}/>,
     ...(['about','privacy','terms'] as const).map(kind=><Route key={`${prefix}/${kind}`} path={`${prefix}/${kind}`} element={<InformationPage kind={kind}/>}/>),
   ]);
-  return <div className={`app-shell ${editor?'editor-shell':''}`}><a className="skip-link" href="#main">{t(locale,'skip')}</a><RouteEffects/><Header/><Routes>{publicRoutes}<Route path="/language" element={<LanguagePage/>}/><Route path="/profile" element={<ProfilePage/>}/><Route path="/builder/:step" element={<WizardPage/>}/><Route path="/review" element={<ReviewPage/>}/><Route path="/builder" element={<Navigate to="/builder/personal" replace/>}/><Route path="*" element={<NotFound/>}/></Routes>{!editor&&<Advertising/>}<Footer/></div>;
+  return <div className={`app-shell ${editor?'editor-shell':''}`}><a className="skip-link" href="#main">{t(locale,'skip')}</a><RouteEffects/><Header/><Routes>{publicRoutes}<Route path="/language" element={<LanguagePage/>}/><Route path="/cv-type" element={<CvTypePage/>}/><Route path="/profile" element={<ProfilePage/>}/><Route path="/builder/:step" element={<WizardPage/>}/><Route path="/review" element={<ReviewPage/>}/><Route path="/builder" element={<Navigate to="/builder/personal" replace/>}/><Route path="*" element={<NotFound/>}/></Routes>{!editor&&<Advertising/>}<Footer/></div>;
 }

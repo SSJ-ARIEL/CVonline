@@ -4,11 +4,11 @@ CVonline ayuda a crear un currículum mediante preguntas guiadas, elegir un dise
 
 ![Portada de CVonline](docs/preview-desktop.png)
 
-El recorrido utiliza pantallas independientes: **portada → idioma → perfil → preguntas → diseños → revisión → descarga**. Las preguntas cubren datos de contacto, experiencia, formación, proyectos, habilidades, idiomas, certificaciones y presentación profesional. El usuario puede volver a sus respuestas antes de descargar.
+El recorrido utiliza pantallas independientes: **portada → idioma → tipo de CV → diseño → perfil → preguntas → revisión → descarga**. Las preguntas cubren datos de contacto, experiencia, formación, proyectos, habilidades, idiomas, certificaciones y presentación profesional. El usuario puede volver a sus respuestas antes de descargar.
 
 ## Funciones
 
-- 17 diseños originales, de una o dos columnas, agrupados por estilo profesional.
+- 24 diseños originales, tres para cada uno de ocho enfoques: Harvard, cronológico inverso, funcional, mixto, académico, europeo, técnico y creativo. La elección del tipo precede al diseño y cambia el orden real de las secciones en la vista previa, PDF y Word.
 - Foto opcional, procesada en el navegador, sin subirla a un servidor.
 - Personalización de color, tamaño del texto y papel A4 o Carta.
 - PDF con texto seleccionable y documentos de varias páginas cuando el contenido lo requiere.
@@ -65,7 +65,7 @@ La aplicación puede ejecutarse sin variables. Para configurar la publicación, 
 | `VITE_ADSENSE_CLIENT` | Identificador público asignado por AdSense, con formato `ca-pub-` y 16 dígitos. No inventar uno. |
 | `VITE_ADSENSE_READY` | `false` por defecto. Cambiar a `true` únicamente después de la aprobación y configuración de consentimiento necesarias. |
 
-Los cambios de estas variables requieren una nueva compilación. Consulta [despliegue en Cloudflare](docs/CLOUDFLARE.md) y [tratamiento de datos](docs/PRIVACY.md).
+Los cambios de estas variables requieren una nueva compilación. Consulta [tipos y fuentes de diseño](docs/CV_TYPES.md), [despliegue en Cloudflare](docs/CLOUDFLARE.md) y [tratamiento de datos](docs/PRIVACY.md).
 
 ## Traducción local
 
@@ -81,10 +81,12 @@ La traducción está implementada, pero **la inferencia completa del respaldo no
 src/
   App.tsx                 Rutas y navegación
   Wizard.tsx              Preguntas guiadas
-  TemplatesPage.tsx        Catálogo de diseños
+  CvTypePage.tsx           Tipo de CV y orientación
+  cv-types.ts              Los ocho enfoques y textos por idioma
+  TemplatesPage.tsx        Catálogo de diseños por tipo
   Review.tsx              Revisión y descargas
   ResumePreview.tsx        Vista previa
-  templates.ts            Los 17 diseños originales
+  templates.ts            Los 24 diseños originales
   exports/                Generadores PDF y DOCX
   translation*.ts         Traducción local y worker
   locales/                Textos de los cuatro idiomas

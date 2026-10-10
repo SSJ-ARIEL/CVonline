@@ -16,3 +16,6 @@
   X-Robots-Tag: noindex, nofollow
 /language
   X-Robots-Tag: noindex, nofollow
+/cv-type
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow

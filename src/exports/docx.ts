@@ -5,13 +5,14 @@ import {
   ExternalHyperlink,
   HeadingLevel,
   ImageRun,
+  PageBorderOffsetFrom,
   Packer,
   Paragraph,
   ShadingType,
   TextRun,
 } from 'docx';
 import type { ResumeData, ResumeSettings } from '../model';
-import { getTemplate } from '../templates';
+import { accentInkColor, accentTextColor, getTemplate } from '../templates';
 import { fileName, resumeLabels, resumeSections, safeFontSize, safeUrl } from '../resume-text';
 
 /** Word uses flowing, editable paragraphs so long CVs never get cut off. */
@@ -22,9 +23,14 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
   const accent = /^[\da-f]{6}$/i.test(settings.accent.replace(/^#/, ''))
     ? settings.accent.replace(/^#/, '').toUpperCase()
     : template.accent.replace(/^#/, '').toUpperCase();
+  const inkAccent = accentInkColor(`#${accent}`).slice(1).toUpperCase();
   const pointSize = safeFontSize(settings.fontSize);
   const bodySize = Math.round(pointSize * 2);
   const centered = template.header === 'center';
+  const treatment = template.treatment;
+  const filledHeader = template.header === 'band' || treatment === 'rail';
+  const headerFill = accent;
+  const headerText = accentTextColor(`#${headerFill}`).slice(1).toUpperCase();
   const spacingAfter = template.density === 'compact' ? 75 : 110;
   const paragraphs: Paragraph[] = [];
 
@@ -41,10 +47,11 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
   const addBody = (text: string) => {
     if (text.trim()) paragraphs.push(paragraph(text));
   };
-  const addHeading = (title: string) => {
+  const addHeading = (title: string, ordinal: number) => {
+    const heading = `${treatment==='ledger'?`${String(ordinal).padStart(2,'0')} / `:''}${template.sectionStyle==='dot'?'● ':''}${title}`;
     paragraphs.push(new Paragraph({
-      children: [run(template.sectionStyle === 'caps' ? title.toLocaleUpperCase(settings.locale) : title, {
-        bold: true, size: bodySize + 2, color: accent,
+      children: [run(template.sectionStyle === 'caps' ? heading.toLocaleUpperCase(settings.locale) : heading, {
+        bold: true, size: bodySize + 2, color: inkAccent,
       })],
       heading: HeadingLevel.HEADING_1,
       keepNext: true,
@@ -52,15 +59,15 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
       ...(template.sectionStyle === 'line' || template.sectionStyle === 'bar' ? {
         border: { bottom: { color: accent, size: template.sectionStyle === 'bar' ? 12 : 4, style: BorderStyle.SINGLE, space: 4 } },
       } : {}),
-      ...(template.sectionStyle === 'dot' ? { indent: { left: 0 }, children: [run('● ', { color: accent }), run(title, { bold: true, size: bodySize + 2, color: accent })] } : {}),
     }));
   };
-  const addEntryTitle = (primary: string, secondary?: string) => {
+  const addEntryTitle = (primary: string, secondary?: string, projectCard = false) => {
     const parts = [primary, secondary].filter((value) => value?.trim());
     if (parts.length) paragraphs.push(new Paragraph({
       children: [run(parts.join(' · '), { bold: true })],
       keepNext: true,
       spacing: { before: 80, after: 45 },
+      ...(projectCard ? { border: { top: { color: accent, size: 4, style: BorderStyle.SINGLE, space: 5 }, left: { color: accent, size: 4, style: BorderStyle.SINGLE, space: 5 } }, indent: { left: 100 } } : {}),
     }));
   };
   const addLink = (value: string) => {
@@ -69,7 +76,7 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     paragraphs.push(new Paragraph({
       children: [link ? new ExternalHyperlink({
         link,
-        children: [run(value, { color: accent })],
+        children: [run(value, { color: inkAccent })],
       }) : run(value)],
       spacing: { after: spacingAfter },
     }));
@@ -82,20 +89,20 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     spacing: { after: 100 },
   }));
   if (data.personal.name.trim()) paragraphs.push(new Paragraph({
-    children: [run(data.personal.name, { bold: true, size: 48, color: template.header === 'band' ? 'FFFFFF' : '202830' })],
+    children: [new TextRun({ text: clean(data.personal.name), font:treatment==='portfolio'?'Cambria':font, bold: !['editorial','portfolio','formal'].includes(treatment), size: treatment==='editorial'||treatment==='portfolio'?60:48, color: filledHeader ? headerText : treatment==='portfolio'?inkAccent:'202830' })],
     alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
     keepNext: true,
     spacing: { after: 95 },
-    ...(template.header === 'band' ? {
-      shading: { type: ShadingType.CLEAR, fill: accent, color: 'auto' },
+    ...(filledHeader ? {
+      shading: { type: ShadingType.CLEAR, fill: headerFill, color: 'auto' },
       border: {
-        top: { style: BorderStyle.SINGLE, color: accent, size: 12, space: 8 },
-        bottom: { style: BorderStyle.SINGLE, color: accent, size: 12, space: 8 },
+        top: { style: BorderStyle.SINGLE, color: headerFill, size: 12, space: 8 },
+        bottom: { style: BorderStyle.SINGLE, color: headerFill, size: 12, space: 8 },
       },
     } : {}),
   }));
   if (data.personal.headline.trim()) paragraphs.push(new Paragraph({
-    children: [run(data.personal.headline, { size: bodySize + 4, color: accent })],
+    children: [run(data.personal.headline, { size: bodySize + 4, color: inkAccent })],
     alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
     keepNext: true,
     spacing: { after: 130 },
@@ -120,18 +127,20 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     border: { bottom: { color: accent, style: BorderStyle.SINGLE, size: 5, space: 8 } },
   }));
 
-  // Shared section assembly keeps PDF, preview and Word content and ordering
-  // identical. Academic and first-job profiles put education before work.
-  for (const section of resumeSections(data, settings)) {
-    addHeading(section.title);
+  // Preserve the selected CV structure in editable, flowing paragraphs. Two
+  // columns are intentionally adapted to one column for reliable Word editing.
+  for (const [index,section] of resumeSections(data, settings).entries()) {
+    addHeading(section.title,index+1);
     if (section.id === 'skills' || section.id === 'interests') {
       addBody(section.entries.map(entry => entry.body).filter(Boolean).join(' · '));
       continue;
     }
     for (const entry of section.entries) {
-      if (entry.title) addEntryTitle(entry.title);
+      const dateFirst = treatment==='timeline' && ['experience','education','certifications'].includes(section.id);
+      if (dateFirst&&entry.date) paragraphs.push(paragraph(entry.date, { color: inkAccent, size: Math.max(16, bodySize - 2) }));
+      if (entry.title) addEntryTitle(entry.title,undefined,treatment==='portfolio'&&section.id==='projects');
       if (entry.subtitle) paragraphs.push(paragraph(entry.subtitle, { color: '59616B', size: Math.max(16, bodySize - 2) }));
-      if (entry.date) paragraphs.push(paragraph(entry.date, { color: '59616B', size: Math.max(16, bodySize - 2) }));
+      if (!dateFirst&&entry.date) paragraphs.push(paragraph(entry.date, { color: '59616B', size: Math.max(16, bodySize - 2) }));
       if (entry.body) addBody(entry.body);
       for (const bullet of entry.bullets ?? []) paragraphs.push(new Paragraph({
         children: [run(bullet)], bullet: { level: 0 }, spacing: { after: 75, line: 270 },
@@ -150,6 +159,13 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
         page: {
           size: settings.paper === 'LETTER' ? { width: 12240, height: 15840 } : { width: 11906, height: 16838 },
           margin: { top: 850, bottom: 850, left: 950, right: 950 },
+          ...(treatment==='frame'?{borders:{
+            pageBorders:{offsetFrom:PageBorderOffsetFrom.PAGE},
+            pageBorderTop:{color:accent,size:4,space:20,style:BorderStyle.SINGLE},
+            pageBorderRight:{color:accent,size:4,space:20,style:BorderStyle.SINGLE},
+            pageBorderBottom:{color:accent,size:4,space:20,style:BorderStyle.SINGLE},
+            pageBorderLeft:{color:accent,size:4,space:20,style:BorderStyle.SINGLE},
+          }}:{}),
         },
       },
       children: paragraphs.length ? paragraphs : [new Paragraph({ children: [] })],

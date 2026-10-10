@@ -10,23 +10,47 @@ import { pt } from '../src/locales/pt';
 const dictionaries = { es, en, it, pt };
 type Locale = keyof typeof dictionaries;
 const languageNames = { es: 'Español', en: 'English', it: 'Italiano', pt: 'Português' };
+const cvTypes = ['harvard', 'chronological', 'functional', 'combination', 'academic', 'european', 'technical', 'creative'] as const;
+type CvType = typeof cvTypes[number];
 const fullName = 'María Ñúñez Çavalli';
 const description = 'Diseño accesible, comunicação clara y investigación de usuarios.';
 
 function field(page: Page, label: string) {
   // Optional labels include a translated "optional" suffix.
-  return page.getByLabel(label, { exact: false }).filter({ visible: true }).first();
+  return page.getByLabel(label, { exact: false }).and(page.locator('input, textarea, select')).filter({ visible: true }).first();
 }
 
-async function start(page: Page, locale: Locale = 'es') {
+async function chooseLanguage(page: Page, locale: Locale = 'es') {
   const copy = dictionaries[locale];
   await page.goto('/language');
   await page.locator('.language-card').filter({ hasText: languageNames[locale] }).click();
   await page.getByRole('button', { name: copy.languageAction, exact: true }).click();
+  await expect(page).toHaveURL(/\/cv-type$/);
+  await expect(page.locator('.cv-type-card')).toHaveCount(8);
+  await expect(page.locator('html')).toHaveAttribute('lang', locale);
+}
+
+async function chooseTypeAndDesign(page: Page, locale: Locale = 'es', cvType: CvType = 'chronological', oneColumn = false) {
+  const copy = dictionaries[locale];
+  await page.locator(`.cv-type-card[data-cv-type="${cvType}"]`).click();
+  await page.getByRole('button', { name: copy.cvTypeAction, exact: true }).click();
+  await expect(page).toHaveURL(/\/templates\?step=design$/);
+  await expect(page.locator('.template-card')).toHaveCount(3);
+  const card = oneColumn ? page.locator('.template-card').filter({ hasText: copy.oneColumn }).first() : page.locator('.template-card').first();
+  const chosenName = await card.locator('.template-info h2').innerText();
+  await card.locator('.template-preview-button').click();
   await expect(page).toHaveURL(/\/profile$/);
+  return chosenName;
+}
+
+async function start(page: Page, locale: Locale = 'es', cvType: CvType = 'chronological') {
+  const copy = dictionaries[locale];
+  await chooseLanguage(page, locale);
+  const chosenName = await chooseTypeAndDesign(page, locale, cvType);
   await page.getByRole('button', { name: new RegExp(copy.profileFirst) }).click();
   await page.getByRole('button', { name: copy.next, exact: true }).click();
   await expect(page).toHaveURL(/\/builder\/personal$/);
+  return chosenName;
 }
 
 async function personal(page: Page, locale: Locale = 'es') {
@@ -53,10 +77,6 @@ async function finish(page: Page, locale: Locale = 'es', summary = description) 
   await expect(page).toHaveURL(/\/builder\/summary$/);
   await field(page, copy.summary).fill(summary);
   await page.getByRole('button', { name: copy.finish, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates$/);
-  await expect(page.locator('.template-card')).toHaveCount(17);
-  await expect(page.locator('.catalog-note')).toHaveText(copy.templatesYourData);
-  await page.locator('.template-preview-button').first().click();
   await expect(page).toHaveURL(/\/review$/);
   await expect(page.locator('.preview-viewport .resume-page')).toContainText(fullName);
   await expect(page.locator('.preview-viewport .resume-page')).toContainText(summary);
@@ -90,19 +110,22 @@ async function getDownload(page: Page, label: string, fileName: string, testInfo
 for (const locale of ['es', 'en', 'it', 'pt'] as const) {
   test(`complete questionnaire and editable Word in ${locale}`, async ({ page }, testInfo) => {
     const copy = dictionaries[locale];
-    await start(page, locale);
+    const chosenName = await start(page, locale);
     await personal(page, locale);
     await finish(page, locale);
     await expect(page.locator('html')).toHaveAttribute('lang', locale);
     await expect(page.locator('.preview-viewport article')).toHaveAttribute('lang', locale);
     await expect(page.getByRole('heading', { name: copy.reviewTitle, exact: true })).toBeVisible();
+    await expect(page.locator('#review-template option:checked')).toHaveText(chosenName);
+    await expect(page.locator('#review-template option')).toHaveCount(3);
     if (locale === 'es') await page.screenshot({ path: '/tmp/cvonline-review.png', fullPage: true });
     const downloaded = await getDownload(page, copy.downloadWord, `cv-${locale}.docx`, testInfo);
     const docx = unzipSync(await readFile(downloaded));
     const xml = strFromU8(docx['word/document.xml']);
     expect(xml).toContain(fullName);
     expect(xml).toContain(description);
-    expect(xml).toContain(copy.summary);
+    // Designs may uppercase headings; the translated wording must remain.
+    expect(xml.toLocaleLowerCase(locale)).toContain(copy.summary.toLocaleLowerCase(locale));
     expect(xml).toContain('<w:t');
   });
 }
@@ -252,24 +275,24 @@ test('answers stay in memory across steps, never leave the browser and disappear
   await page.getByRole('button', { name: es.resetConfirm, exact: true }).click();
   await expect(page).toHaveURL(/\/language$/);
   await page.getByRole('button', { name: es.languageAction, exact: true }).click();
+  await chooseTypeAndDesign(page);
   await page.getByRole('button', { name: es.next, exact: true }).click();
   await expect(field(page, es.name)).toHaveValue('');
 });
 
-test('all 17 designs, family filters and public information are reachable', async ({ page }) => {
+test('all 24 designs, type filters and public information are reachable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu experiencia');
   await page.screenshot({ path: '/tmp/cvonline-final-desktop.png', fullPage: true });
   await page.getByRole('link', { name: es.navTemplates, exact: true }).click();
-  await expect(page.locator('.template-card')).toHaveCount(17);
-  const expectedFamilies: [string, number][] = [[es.familyClassic, 3], [es.familyModern, 4], [es.familyExecutive, 3], [es.familyTechnical, 2], [es.familyCreative, 3], [es.familyAcademic, 2]];
-  for (const [family, count] of expectedFamilies) {
-    await page.getByRole('button', { name: family, exact: true }).click();
-    await expect(page.locator('.template-card')).toHaveCount(count);
-    await expect(page.locator('.template-count')).toHaveText(`${count} diseños`);
+  await expect(page.locator('.template-card')).toHaveCount(24);
+  for (const cvType of cvTypes) {
+    await page.locator(`[data-cv-filter="${cvType}"]`).click();
+    await expect(page.locator('.template-card')).toHaveCount(3);
+    await expect(page.locator('.template-count')).toHaveText('3 diseños');
   }
-  await page.getByRole('button', { name: es.templateAll, exact: true }).click();
-  await expect(page.locator('.resume-page')).toHaveCount(17);
+  await page.locator('[data-cv-filter="all"]').click();
+  await expect(page.locator('.resume-page')).toHaveCount(24);
   await expect(page.locator('.catalog-note')).toHaveText(es.templatesSample);
   await page.getByRole('link', { name: es.navHow, exact: true }).click();
   await expect(page.locator('.how-card')).toHaveCount(3);
@@ -287,7 +310,8 @@ test('all 17 designs, family filters and public information are reachable', asyn
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt');
 });
 
-test('mobile 390px supports the full flow and every template without horizontal overflow', async ({ page }) => {
+test('mobile 390px supports type selection, the full flow and every template without horizontal overflow', async ({ page }) => {
+  page.on('dialog', dialog => dialog.accept());
   await page.setViewportSize({ width: 390, height: 844 });
   const noOverflow = async () => {
     const widths = await page.evaluate(() => ({ viewport: innerWidth, body: document.documentElement.scrollWidth }));
@@ -296,19 +320,28 @@ test('mobile 390px supports the full flow and every template without horizontal 
   await page.goto('/');
   await noOverflow();
   await page.screenshot({ path: '/tmp/cvonline-final-mobile.png', fullPage: true });
-  await start(page);
+  await chooseLanguage(page);
+  await noOverflow();
+  await page.screenshot({ path: '/tmp/cvonline-cv-type-mobile.png', fullPage: true });
+  await chooseTypeAndDesign(page);
+  await noOverflow();
+  await page.getByRole('button', { name: new RegExp(es.profileFirst) }).click();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
   await noOverflow();
   await personal(page);
   await finish(page);
   await noOverflow();
   const options = await page.locator('#review-template option').evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value));
-  expect(options).toHaveLength(17);
+  expect(options).toHaveLength(3);
   for (const value of options) {
     await page.locator('#review-template').selectOption(value);
     await expect(page.locator('.preview-viewport article')).toContainText(fullName);
     await noOverflow();
   }
   await page.screenshot({ path: '/tmp/cvonline-review-mobile.png', fullPage: true });
+  await page.goto('/templates');
+  await expect(page.locator('.template-card')).toHaveCount(24);
+  await noOverflow();
 });
 
 test('translation rejects identical languages without changing answers', async ({ page }) => {
@@ -348,7 +381,6 @@ test('continuing keeps skills and interests typed without pressing Enter', async
   await expect(page.getByPlaceholder(es.interestsPlaceholder)).toHaveValue('');
   await page.getByRole('button', { name: es.next, exact: true }).click();
   await page.getByRole('button', { name: es.finish, exact: true }).click();
-  await page.locator('.template-preview-button').first().click();
   await expect(page).toHaveURL(/\/review$/);
   await expect(page.locator('.preview-viewport .resume-section-skills .resume-tags span')).toHaveText(['TypeScript', 'Comunicación', 'Diseño UX']);
   await expect(page.locator('.preview-viewport .resume-section-interests .resume-tags span')).toHaveText(['Fotografía', 'Música']);
@@ -371,7 +403,6 @@ test('partial custom sections show missing fields and preserve content until com
   await page.getByLabel(es.customBody, { exact: true }).first().fill('Premio de diseño 2026');
   await page.getByLabel(es.customTitle, { exact: true }).nth(1).fill('Publicaciones');
   await page.getByRole('button', { name: es.finish, exact: true }).click();
-  await page.locator('.template-preview-button').first().click();
   await expect(page).toHaveURL(/\/review$/);
   const resume = page.locator('.preview-viewport article');
   await expect(resume).toContainText('Premios');
@@ -381,4 +412,173 @@ test('partial custom sections show missing fields and preserve content until com
   await page.getByRole('link', { name: es.editAnswers, exact: true }).click();
   await page.locator('.flow-progress').getByRole('link', { name: /Tu presentación/ }).click();
   await expect(page.locator('.entry-card')).toHaveCount(2);
+});
+
+test('each CV type explains its purpose and exposes three exclusive professional designs', async ({ page }) => {
+  const names = new Set<string>();
+  for (const cvType of cvTypes) {
+    await chooseLanguage(page);
+    const card = page.locator(`.cv-type-card[data-cv-type="${cvType}"]`);
+    expect((await card.innerText()).trim().length).toBeGreaterThan(100);
+    await card.click();
+    await page.getByRole('button', { name: es.cvTypeAction, exact: true }).click();
+    await expect(page).toHaveURL(/\/templates\?step=design$/);
+    await expect(page.locator('.template-card')).toHaveCount(3);
+    for (const name of await page.locator('.template-info h2').allTextContents()) {
+      expect(names.has(name)).toBe(false);
+      names.add(name);
+    }
+    await expect(page.locator('.catalog-note')).toHaveText(es.templatesSample);
+  }
+  expect(names.size).toBe(24);
+});
+
+test('type selection is translated and remains usable at 390px in all four languages', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const locale of ['es', 'en', 'it', 'pt'] as const) {
+    const copy = dictionaries[locale];
+    await chooseLanguage(page, locale);
+    await expect(page.getByRole('heading', { name: copy.cvTypeTitle, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: copy.cvTypeAction, exact: true })).toBeVisible();
+    const widths = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
+    expect(widths.document).toBeLessThanOrEqual(widths.viewport + 1);
+    for (const cvType of cvTypes) {
+      const card = page.locator(`.cv-type-card[data-cv-type="${cvType}"]`);
+      await expect(card).toBeVisible();
+      expect((await card.innerText()).trim().length).toBeGreaterThan(80);
+    }
+  }
+});
+
+test('direct editor routes require language, then a CV type and a design', async ({ page }) => {
+  for (const path of ['/cv-type', '/templates?step=design', '/profile', '/builder/personal', '/review']) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/language$/);
+  }
+  await chooseLanguage(page);
+  await page.evaluate(() => {
+    history.pushState({}, '', '/profile');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page).toHaveURL(/\/cv-type$/);
+  await page.locator('.cv-type-card[data-cv-type="technical"]').click();
+  await page.getByRole('button', { name: es.cvTypeAction, exact: true }).click();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/builder/personal');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page).toHaveURL(/\/templates\?step=design$/);
+  await page.locator('.template-preview-button').first().click();
+  await expect(page).toHaveURL(/\/profile$/);
+});
+
+function expectMarkersInOrder(text: string, markers: string[]) {
+  // PDF text extraction may add spaces between tracked heading letters.
+  const searchable = text.replace(/\s+/g, '');
+  let previous = -1;
+  for (const marker of markers) {
+    const index = searchable.indexOf(marker);
+    expect(index, `Missing marker ${marker}`).toBeGreaterThanOrEqual(0);
+    expect(index, `${marker} should follow ${markers[markers.indexOf(marker) - 1] ?? 'the name'}`).toBeGreaterThan(previous);
+    previous = index;
+  }
+}
+
+test('changing all eight types keeps answers and changes section order in previews, PDF and Word', async ({ page }, testInfo) => {
+  test.setTimeout(180_000);
+  await start(page);
+  await personal(page);
+  await page.locator('#photo-input').setInputFiles(await photoFixture(page, 'image/png'));
+  await expect(page.locator('.photo-uploader img')).toBeVisible();
+  const photoSrc = await page.locator('.photo-uploader img').getAttribute('src');
+  expect(photoSrc).toMatch(/^data:image\/jpeg;base64,/);
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.addExperience, exact: true }).click();
+  let entry = page.locator('.entry-card').first();
+  await entry.getByLabel(es.role, { exact: true }).fill('ANTIGUAVERIFICADA');
+  await entry.getByLabel(es.company, { exact: true }).fill('Estudio anterior');
+  await entry.getByLabel(es.startDate, { exact: true }).fill('2011-01');
+  await entry.getByLabel(es.endDate, { exact: true }).fill('2014-06');
+  await page.getByRole('button', { name: es.addExperience, exact: true }).click();
+  entry = page.locator('.entry-card').nth(1);
+  await entry.getByLabel(es.role, { exact: true }).fill('EXPERIENCIAVERIFICADA');
+  await entry.getByLabel(es.company, { exact: true }).fill('Estudio actual');
+  await entry.getByLabel(es.startDate, { exact: true }).fill('2021-03');
+  await entry.getByRole('checkbox', { name: es.currentJob, exact: true }).check();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.addEducation, exact: true }).click();
+  await field(page, es.degree).fill('FORMACIONVERIFICADA');
+  await field(page, es.institution).fill('Universidad de ejemplo');
+  await page.getByRole('button', { name: es.addProject, exact: true }).click();
+  await field(page, es.projectName).fill('PROYECTOVERIFICADO');
+  await field(page, es.projectDescription).fill('Proyecto accesible construido con investigación.');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByPlaceholder(es.skillsPlaceholder).fill('COMPETENCIAVERIFICADA');
+  await page.getByRole('button', { name: es.addLanguage, exact: true }).click();
+  await page.getByRole('textbox', { name: es.languageName, exact: true }).fill('IDIOMAVERIFICADO');
+  await page.getByRole('combobox', { name: es.languageLevel, exact: true }).selectOption('C1');
+  await page.getByRole('button', { name: es.addCertification, exact: true }).click();
+  await field(page, es.certificationName).fill('CERTIFICACIONVERIFICADA');
+  await page.getByPlaceholder(es.interestsPlaceholder).fill('INTERESVERIFICADO');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await field(page, es.summary).fill('PERFILVERIFICADO');
+  await page.getByRole('button', { name: es.addCustom, exact: true }).click();
+  await field(page, es.customTitle).fill('PUBLICACIONVERIFICADA');
+  await field(page, es.customBody).fill('Artículo publicado sobre accesibilidad.');
+  await page.getByRole('button', { name: es.finish, exact: true }).click();
+  await expect(page).toHaveURL(/\/review$/);
+  const markers = {
+    summary: 'PERFILVERIFICADO', experience: 'EXPERIENCIAVERIFICADA', education: 'FORMACIONVERIFICADA',
+    projects: 'PROYECTOVERIFICADO', skills: 'COMPETENCIAVERIFICADA', custom: 'PUBLICACIONVERIFICADA',
+    languages: 'IDIOMAVERIFICADO', certifications: 'CERTIFICACIONVERIFICADA', interests: 'INTERESVERIFICADO',
+  };
+  const expectedOrder: Record<CvType, (keyof typeof markers)[]> = {
+    harvard: ['summary', 'education', 'experience', 'projects', 'custom', 'skills', 'languages', 'certifications', 'interests'],
+    chronological: ['summary', 'experience', 'education', 'projects', 'custom', 'skills', 'languages', 'certifications', 'interests'],
+    functional: ['summary', 'skills', 'projects', 'experience', 'education', 'custom', 'certifications', 'languages', 'interests'],
+    combination: ['summary', 'skills', 'experience', 'projects', 'education', 'custom', 'certifications', 'languages', 'interests'],
+    academic: ['summary', 'education', 'custom', 'projects', 'experience', 'certifications', 'skills', 'languages', 'interests'],
+    european: ['summary', 'experience', 'education', 'languages', 'skills', 'certifications', 'projects', 'custom', 'interests'],
+    technical: ['summary', 'skills', 'projects', 'experience', 'education', 'certifications', 'custom', 'languages', 'interests'],
+    creative: ['summary', 'projects', 'experience', 'skills', 'education', 'custom', 'certifications', 'languages', 'interests'],
+  };
+  for (const cvType of cvTypes) {
+    await page.locator('#review-cv-type').selectOption(cvType);
+    await expect(page).toHaveURL(/\/templates\?step=design$/);
+    await expect(page.locator('.template-card')).toHaveCount(3);
+    await expect(page.locator('.catalog-note')).toHaveText(es.templatesYourData);
+    const oneColumn = page.locator('.template-card').filter({ hasText: es.oneColumn }).first();
+    await oneColumn.locator('.template-preview-button').click();
+    await expect(page).toHaveURL(/\/review$/);
+    await expect(page.locator('#review-cv-type')).toHaveValue(cvType);
+    await expect(page.locator('#review-template option')).toHaveCount(3);
+    const resume = page.locator('.preview-viewport article');
+    await expect(resume).toContainText(fullName);
+    await expect(resume).toContainText('maria.private@example.com');
+    await expect(page.getByRole('checkbox', { name: es.photoShow, exact: true })).toBeChecked();
+    await expect(resume.locator('.resume-photo')).toHaveAttribute('src', photoSrc!);
+    await expect(resume.locator('.resume-section-experience h3')).toHaveText(['EXPERIENCIAVERIFICADA', 'ANTIGUAVERIFICADA']);
+    const orderedMarkers = expectedOrder[cvType].map(section => markers[section]);
+    expectMarkersInOrder(await resume.innerText(), orderedMarkers);
+    const pdf = await getDownload(page, es.downloadPdf, `order-${cvType}.pdf`, testInfo);
+    const pdfText = execFileSync('pdftotext', ['-layout', pdf, '-'], { encoding: 'utf8' });
+    expectMarkersInOrder(pdfText, orderedMarkers);
+    expect(pdfText.indexOf('EXPERIENCIAVERIFICADA')).toBeLessThan(pdfText.indexOf('ANTIGUAVERIFICADA'));
+    expect(execFileSync('pdfimages', ['-list', pdf], { encoding: 'utf8' })).toMatch(/\bimage\b/);
+    const docx = unzipSync(await readFile(await getDownload(page, es.downloadWord, `order-${cvType}.docx`, testInfo)));
+    const wordXml = strFromU8(docx['word/document.xml']);
+    expect(wordXml).toContain('<w:drawing>');
+    const wordText = wordXml.replace(/<[^>]+>/g, '');
+    expectMarkersInOrder(wordText, orderedMarkers);
+    expect(wordText).toContain(fullName);
+    expect(wordText).toContain('maria.private@example.com');
+    expect(wordText.indexOf('EXPERIENCIAVERIFICADA')).toBeLessThan(wordText.indexOf('ANTIGUAVERIFICADA'));
+  }
+  await page.getByRole('link', { name: es.editAnswers, exact: true }).click();
+  await expect(field(page, es.name)).toHaveValue(fullName);
+  await expect(field(page, es.email)).toHaveValue('maria.private@example.com');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  // Presentation sorts jobs without mutating the user's input order.
+  await expect(page.locator('.entry-card').first().getByLabel(es.role, { exact: true })).toHaveValue('ANTIGUAVERIFICADA');
+  await expect(page.locator('.entry-card').nth(1).getByLabel(es.role, { exact: true })).toHaveValue('EXPERIENCIAVERIFICADA');
 });

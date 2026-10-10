@@ -1,4 +1,4 @@
-# Validación de la primera versión
+# Validación de CVonline
 
 La versión se comprobó en el entorno de desarrollo de Codex con Node.js 24, npm y Chromium. Estas comprobaciones describen el entorno actual; no acreditan todavía un despliegue público ni la ejecución de GitHub Actions.
 
@@ -8,15 +8,19 @@ La versión se comprobó en el entorno de desarrollo de Codex con Node.js 24, np
 - `npm run build`: correcto, con TypeScript, 52 páginas públicas prerenderizadas, avisos de licencias y comprobación del límite de 25 MiB por archivo de Cloudflare Pages.
 - `npm audit --omit=dev --audit-level=high`: cero vulnerabilidades conocidas reportadas.
 - Arranque de desarrollo: portada y selector de cuatro idiomas comprobados en Chromium.
-- `npm test` sobre la compilación de producción: **13 pruebas aprobadas, cero fallidas, cero omitidas, cero inestables**.
-- Revisión visual: 64 combinaciones de idioma, tamaño de pantalla y página pública sin desbordamiento horizontal.
+- `npm test` sobre la compilación de producción: **17 pruebas aprobadas, cero fallidas, cero omitidas, cero inestables**.
+- Revisión visual de los nuevos pasos: 48 combinaciones de idioma, tamaño de pantalla y selección de tipo, diseño o perfil sin desbordamiento horizontal.
+- Catálogo: 24 composiciones revisadas en el navegador y 96 casos extensos con cuatro idiomas, nombres largos, contenido personalizado y colores claros, sin recortes ni desbordamientos.
+- Exportaciones del catálogo: PDF y Word reales para los 24 diseños, más tres casos de varias páginas; texto completo, caracteres especiales y fotografía conservados.
 - Configuración de producción probada en un directorio temporal: lectura de `.env.local`, 52 URL del sitemap, alternativas de cuatro idiomas, exclusión del editor y generación condicional de `ads.txt`. Los datos ficticios de esta comprobación no se incluyen en el build publicado.
 
 ## Cobertura del navegador
 
-Las pruebas cubren los recorridos en español, inglés, italiano y portugués; contacto y fechas inválidos; fotos PNG, JPEG y WebP procesadas localmente; 17 diseños y sus filtros; navegación móvil; recarga y reinicio; ausencia de almacenamiento persistente y envío de datos personales; y exportación real de PDF y DOCX.
+Las pruebas cubren los recorridos en español, inglés, italiano y portugués; contacto y fechas inválidos; fotos PNG, JPEG y WebP procesadas localmente; ocho tipos de CV y sus 24 diseños; navegación móvil; recarga y reinicio; ausencia de almacenamiento persistente y envío de datos personales; y exportación real de PDF y DOCX.
 
 Los documentos se inspeccionan con Poppler y mediante lectura de los archivos XML del DOCX. Se verifican caracteres acentuados, fotografía, texto largo completo, PDF de varias páginas, papel Carta, diseños de una y dos columnas y contenido editable de Word. También se comprueba que continuar conserve los borradores de habilidades e intereses y que las secciones personalizadas incompletas soliciten el campo que falta.
+
+Los nuevos escenarios comprueban el recorrido obligatorio idioma → tipo → diseño, tres diseños exclusivos por enfoque y descripciones traducidas. Cambiar entre los ocho tipos conserva respuestas y foto, modifica el orden en vista previa, PDF y Word, y presenta las fechas recientes primero sin alterar el orden de las entradas del formulario.
 
 ## Traducción: límite pendiente
 

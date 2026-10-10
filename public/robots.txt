@@ -4,3 +4,4 @@ Disallow: /builder/
 Disallow: /review
 Disallow: /profile
 Disallow: /language
+Disallow: /cv-type

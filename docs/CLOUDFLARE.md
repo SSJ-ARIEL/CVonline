@@ -50,7 +50,7 @@ Cuando decidas adquirir un dominio, añádelo mediante la sección de dominios p
 Los archivos `public/_redirects` y `public/_headers` se copian a `dist` y están preparados para Pages:
 
 - Las páginas públicas prerenderizadas se sirven como HTML, incluidas las guías por idioma.
-- Las rutas `/language`, `/profile`, `/builder/*` y `/review` funcionan como navegación de la aplicación.
+- Las rutas `/language`, `/cv-type`, `/profile`, `/builder/*` y `/review` funcionan como navegación de la aplicación.
 - Las pantallas con datos personales no forman parte del sitemap y se marcan para evitar indexación.
 - El editor utiliza `Cache-Control: no-store`; las cabeceras también restringen acceso a cámara, micrófono y geolocalización y bloquean la inclusión de la web en un iframe.
 
@@ -65,9 +65,9 @@ Cuando `VITE_SITE_URL` contiene un origen HTTPS válido, la compilación añade 
 Comprueba en escritorio y móvil:
 
 1. Portada, navegación y cambio de los cuatro idiomas.
-2. Entrada al recorrido y regreso entre sus pantallas sin perder respuestas durante la sesión.
+2. Elección de tipo después del idioma, diseños compatibles y regreso entre pantallas sin perder respuestas durante la sesión.
 3. Datos de contacto, formación, experiencia, proyectos y secciones adicionales.
-4. Foto opcional y visualización de los 17 diseños.
+4. Foto opcional y selección de ocho tipos y visualización de sus 24 diseños.
 5. PDF descargado con texto seleccionable y Word editable; apertura de archivos cortos y largos, caracteres acentuados, foto y saltos de página.
 6. Cada guía abierta por su URL, incluida una recarga directa.
 7. Descartar y reiniciar; confirmar que una recarga no recupera las respuestas.

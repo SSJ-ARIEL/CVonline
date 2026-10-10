@@ -1,5 +1,7 @@
 export type Locale = 'es' | 'en' | 'it' | 'pt';
 export type Profile = 'experienced' | 'first-job' | 'career-change' | 'academic';
+export type CvType = 'harvard' | 'chronological' | 'functional' | 'combination' | 'academic' | 'european' | 'technical' | 'creative';
+export type TemplateTreatment = 'formal' | 'editorial' | 'frame' | 'rail' | 'banner' | 'timeline' | 'ledger' | 'portfolio';
 export type PaperSize = 'A4' | 'LETTER';
 
 export interface Personal {
@@ -67,9 +69,12 @@ export interface TemplateDefinition {
   density: 'compact' | 'comfortable';
   sidebar?: 'left' | 'right';
   sectionStyle: 'line' | 'bar' | 'caps' | 'dot';
+  cvTypes: CvType[];
+  treatment: TemplateTreatment;
 }
 export interface ResumeSettings {
   locale: Locale;
+  cvType: CvType;
   templateId: string;
   accent: string;
   paper: PaperSize;
