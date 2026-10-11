@@ -65,9 +65,9 @@ La aplicación puede ejecutarse sin variables. Para configurar la publicación, 
 | `VITE_SITE_URL` | Origen HTTPS real publicado, sin ruta. Genera las URL canónicas, alternativas por idioma y `sitemap.xml`. Déjala vacía mientras no exista una dirección definitiva. |
 | `VITE_OPERATOR_NAME` | Nombre real del responsable de la web, mostrado en las páginas informativas. Completar antes de publicar. |
 | `VITE_CONTACT_EMAIL` | Correo público real de contacto. Completar antes de publicar. |
-| `VITE_ADSENSE_CLIENT` | Identificador público asignado por AdSense, con formato `ca-pub-` y 16 dígitos. Genera el meta de verificación y `ads.txt` sin activar anuncios. No inventar uno. |
+| `VITE_ADSENSE_CLIENT` | Identificador público asignado por AdSense. La compilación usa por defecto el ID real del fragmento en `index.html`; esta variable permite sustituirlo. Genera el script, el meta y `ads.txt`. |
 | `VITE_GOOGLE_SITE_VERIFICATION` | Valor público `content` de la etiqueta HTML proporcionada por Search Console para verificar la propiedad Prefijo de URL. |
-| `VITE_ADSENSE_READY` | `false` por defecto. Cambiar a `true` únicamente después de la aprobación y configuración de consentimiento necesarias. |
+| `VITE_ADSENSE_READY` | Controla el componente opcional de preferencias de publicidad. No impide la carga del script estático de verificación en las páginas públicas. |
 
 Los cambios de estas variables requieren una nueva compilación. Consulta [tipos y fuentes de diseño](docs/CV_TYPES.md), [despliegue en Cloudflare](docs/CLOUDFLARE.md) y [tratamiento de datos](docs/PRIVACY.md).
 
@@ -109,7 +109,9 @@ docs/                     Publicación y privacidad
 
 El código permanece en GitHub y la web está desplegada en Cloudflare Pages: **https://cvonline-zw0.pages.dev**. Cloudflare confirmó el despliegue de producción; el entorno de desarrollo recibe HTTP 403 al intentar acceder al dominio público, por lo que esa comprobación externa sigue pendiente. Un dominio propio puede conectarse después sin cambiar de repositorio.
 
-**No se carga publicidad con la configuración predeterminada.** La integración prevista se limita a las páginas públicas. Activar el cargador de AdSense requiere la aprobación de Google, identificación del responsable y contacto, y la configuración de una plataforma de consentimiento certificada cuando corresponda. El cuadro de elección incluido en la interfaz no sustituye esa plataforma. No se garantiza aprobación ni ingresos con un subdominio o dominio propio.
+`index.html` contiene el fragmento de AdSense solicitado por el propietario, con ID `ca-pub-7507181626477156`. La compilación lo incluye en el `<head>` de las 52 páginas públicas, genera el meta de cuenta y `ads.txt`, y prepara `editor.html` sin ese script. Las rutas del editor se sirven mediante rewrites específicos y la entrada inicial abre un documento limpio antes de solicitar datos personales.
+
+La carga del script público es independiente de `VITE_ADSENSE_READY`. Google puede tratar metadatos y cookies; la aprobación, los anuncios automáticos y el consentimiento dependen de la configuración real de la cuenta. El propietario gestiona esos ajustes y la CMP certificada cuando corresponda. El cuadro de elección incluido no sustituye una CMP ni bloquea el script estático. No se garantiza aprobación ni ingresos.
 
 ## Derechos y dependencias
 

@@ -1,3 +1,9 @@
-# Cloudflare Pages serves existing files first and supplies SPA fallback when
-# no top-level 404.html exists. No catch-all rewrite: it would override the
-# prerendered public pages and even JavaScript, fonts and WebAssembly assets.
+# Public pages contain the owner's AdSense verification script. All initial
+# editor requests use a separate document without third-party scripts.
+/language /editor.html 200
+/cv-type /editor.html 200
+/profile /editor.html 200
+/review /editor.html 200
+/builder /editor.html 200
+/builder/* /editor.html 200
+# No catch-all rewrite: public pages and assets keep their original responses.

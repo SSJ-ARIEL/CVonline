@@ -14,16 +14,21 @@ const configuration=loadEnv('production',process.cwd(),'VITE_');
 const origin=(configuration.VITE_SITE_URL||'').replace(/\/$/,'');
 const validOrigin=/^https:\/\/[a-z0-9.-]+$/i.test(origin)?origin:'';
 const escape=(text:string)=>text.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
-// Verification belongs in the HTML source, including the index.html SPA fallback.
-// These public identifiers do not enable advertising or require an ad loader.
+// Ownership metadata belongs in the public HTML source. The editor stays clean.
 const verification=(configuration.VITE_GOOGLE_SITE_VERIFICATION||'').trim();
-const client=(configuration.VITE_ADSENSE_CLIENT||'').trim();
+const adsenseTag=html.match(/<script\b(?=[^>]*\bid="adsense-verification")[^>]*>[\s\S]*?<\/script>/)?.[0]||'';
+const defaultClient=adsenseTag.match(/client=(ca-pub-\d{16})/)?.[1]||'';
+const client=(configuration.VITE_ADSENSE_CLIENT||defaultClient).trim();
 const validClient=/^ca-pub-\d{16}$/.test(client);
+// The public verification script must never be part of the editor document.
+const editorHtml=html.replace(adsenseTag,'');
+await writeFile('dist/editor.html',editorHtml);
+const publicHtml=adsenseTag?html.replace(adsenseTag,()=>validClient?`<script id="adsense-verification" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}" crossorigin="anonymous"></script>`:''):html;
 const verificationMetadata=[
   verification?`<meta name="google-site-verification" content="${escape(verification)}" />`:'',
   validClient?`<meta name="google-adsense-account" content="${escape(client)}" />`:'',
 ].filter(Boolean).join('\n');
-const shell=verificationMetadata?html.replace('</head>',()=>`${verificationMetadata}\n</head>`):html;
+const shell=verificationMetadata?publicHtml.replace('</head>',()=>`${verificationMetadata}\n</head>`):publicHtml;
 const paths:string[]=[];
 for(const language of LOCALES){
   const prefix=language.code==='es'?'':`/${language.code}`;

@@ -299,6 +299,66 @@ test('answers stay in memory across steps, never leave the browser and disappear
   await expect(field(page, es.name)).toHaveValue('');
 });
 
+test('public AdSense verification executes once and the editor starts in a clean document', async ({ page }) => {
+  const verificationUrl = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7507181626477156';
+  const publicResponse = await page.request.get('/');
+  expect(publicResponse.ok()).toBe(true);
+  const publicHead = /<head\b[^>]*>([\s\S]*?)<\/head>/i.exec(await publicResponse.text())?.[1];
+  expect(publicHead).toBeDefined();
+  expect(publicHead).toContain(`<script id="adsense-verification" async src="${verificationUrl}" crossorigin="anonymous"></script>`);
+
+  const googleRequests: string[] = [];
+  page.on('request', request => {
+    if (new URL(request.url()).hostname.endsWith('.googlesyndication.com')) googleRequests.push(request.url());
+  });
+  // Execute a controlled stand-in; the test never calls Google's servers.
+  await page.route('https://pagead2.googlesyndication.com/**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/javascript',
+    headers: { 'access-control-allow-origin': '*' },
+    body: 'window.__cvonlineVerificationTestRuns = (window.__cvonlineVerificationTestRuns || 0) + 1;',
+  }));
+  const verificationRuns = () => page.evaluate(() => (window as Window & { __cvonlineVerificationTestRuns?: number }).__cvonlineVerificationTestRuns);
+  await page.goto('/');
+  await expect.poll(verificationRuns).toBe(1);
+  expect(googleRequests).toEqual([verificationUrl]);
+
+  await page.locator('.hero-actions .button.primary').click();
+  await expect(page).toHaveURL(/\/language$/);
+  await expect(page.getByRole('heading', { name: es.languageTitle, exact: true })).toBeVisible();
+  expect(await verificationRuns()).toBeUndefined();
+  await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
+  await page.getByRole('button', { name: es.languageAction, exact: true }).click();
+  await expect(page).toHaveURL(/\/cv-type$/);
+  await chooseTypeAndDesign(page);
+  await page.getByRole('button', { name: new RegExp(es.profileFirst) }).click();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await personal(page);
+  expect(await verificationRuns()).toBeUndefined();
+  await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
+  expect(googleRequests).toEqual([verificationUrl]);
+
+  for (const path of ['/profile', '/review', '/builder/personal']) {
+    const response = await page.request.get(path);
+    expect(response.ok()).toBe(true);
+    const editorHtml = await response.text();
+    expect(editorHtml).not.toContain('id="adsense-verification"');
+    expect(editorHtml).not.toContain(verificationUrl);
+  }
+
+  // A legacy design URL must also replace the public document before showing forms.
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto('/templates?step=design');
+  await expect(page).toHaveURL(/\/language$/);
+  await expect(page.getByRole('heading', { name: es.languageTitle, exact: true })).toBeVisible();
+  expect(await verificationRuns()).toBeUndefined();
+  await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
+  const legacyRequestCount = googleRequests.length;
+  await page.getByRole('button', { name: es.languageAction, exact: true }).click();
+  await expect(page.locator('.cv-type-card')).toHaveCount(8);
+  expect(googleRequests).toHaveLength(legacyRequestCount);
+});
+
 test('all 400 unique designs, type filters and public information are reachable', async ({ page }) => {
   test.setTimeout(100_000);
   await page.goto('/');

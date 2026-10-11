@@ -48,8 +48,8 @@ Completa las variables públicas indicadas en `.env.example` para producción y,
 - `VITE_OPERATOR_NAME`: nombre real del responsable.
 - `VITE_CONTACT_EMAIL`: correo público real de contacto.
 - `VITE_SITE_URL`: origen HTTPS definitivo, sin rutas ni parámetros.
-- `VITE_ADSENSE_READY=false`: mantener mientras no esté lista la monetización.
-- `VITE_ADSENSE_CLIENT`: identificador público real `ca-pub-…`; genera la verificación HTML y `ads.txt` sin activar anuncios.
+- `VITE_ADSENSE_READY=false`: mantiene desactivado el componente opcional; no bloquea el fragmento estático de AdSense.
+- `VITE_ADSENSE_CLIENT`: permite sustituir el ID real del fragmento de `index.html`; genera el script, el meta de cuenta y `ads.txt`.
 - `VITE_GOOGLE_SITE_VERIFICATION`: solo el valor `content` de la etiqueta HTML de Search Console, no la etiqueta completa.
 
 No incluyas secretos en variables `VITE_*`: se incorporan al JavaScript público. Los datos del responsable y contacto no se inventan; el propietario debe proporcionarlos para completar las páginas informativas y solicitar monetización.
@@ -73,7 +73,7 @@ Los archivos `public/_redirects` y `public/_headers` se copian a `dist` y están
 - Las pantallas con datos personales no forman parte del sitemap y se marcan para evitar indexación.
 - El editor utiliza `Cache-Control: no-store`; las cabeceras también restringen acceso a cámara, micrófono y geolocalización y bloquean la inclusión de la web en un iframe.
 
-`_redirects` contiene comentarios y no añade una regla global. Pages sirve los archivos existentes y proporciona el fallback de una SPA cuando no existe `404.html` en la raíz. Así se conservan los HTML públicos y los recursos de la aplicación. No añadas `/* /index.html 200`: las reglas de redirección de Pages tienen prioridad incluso cuando existe un archivo y esa regla interceptaría las guías, JavaScript y WebAssembly. Tampoco añadas un `404.html` raíz sin configurar antes las rutas del editor.
+`_redirects` reescribe únicamente `/language`, `/cv-type`, `/profile`, `/review`, `/builder` y `/builder/*` hacia `/editor.html`, cuyo HTML no incluye AdSense. Las páginas públicas conservan su HTML prerenderizado con el fragmento de verificación. El enlace inicial al editor abre un documento nuevo; las URL antiguas `/templates?step=design` abren también un documento limpio antes de mostrar formularios. No se añade una regla global. No añadas `/* /index.html 200`: las reglas de redirección de Pages tienen prioridad incluso cuando existe un archivo y esa regla interceptaría las guías, JavaScript y WebAssembly. Tampoco añadas un `404.html` raíz sin configurar antes las rutas del editor.
 
 Referencias oficiales: [archivos y fallback SPA](https://developers.cloudflare.com/pages/configuration/serving-pages/) y [prioridad de redirecciones](https://developers.cloudflare.com/pages/configuration/redirects/).
 
@@ -91,19 +91,19 @@ Comprueba en escritorio y móvil:
 6. Cada guía abierta por su URL, incluida una recarga directa.
 7. Descartar y reiniciar; confirmar que una recarga no recupera las respuestas.
 8. Traducción real, con permisos de descarga de modelos, en los navegadores y dispositivos admitidos.
-9. Nombre del responsable y contacto reales en las páginas informativas; ausencia de anuncios antes de activarlos.
+9. Código de AdSense en el HTML público, su ausencia en el editor y configuración real de contacto, consentimiento y anuncios en la cuenta del propietario.
 
 La traducción de respaldo requiere acceso HTTPS a Hugging Face y a su CDN de archivos. En el entorno de desarrollo, un CDN devolvió HTTP 403 y no permitió verificar la inferencia completa. Una compilación correcta por sí sola no acredita que se puedan descargar o ejecutar los modelos en el dispositivo del visitante. No deshabilites TLS ni cambies a un servicio remoto que reciba los datos del currículum para resolverlo.
 
 ## 7. Verificar AdSense y solicitar revisión
 
-Mantén la publicidad desactivada hasta tener una web pública revisada y la autorización correspondiente de Google. El contenido original y una interfaz funcional ayudan a presentar un sitio completo, pero ningún alojamiento o dominio garantiza aprobación o ingresos.
+El propietario solicitó añadir el fragmento de verificación de AdSense con su ID real. El script se carga en las páginas públicas; los anuncios y el consentimiento se gestionan en la cuenta del propietario. El contenido original y una interfaz funcional ayudan a presentar un sitio completo, pero ningún alojamiento o dominio garantiza aprobación o ingresos.
 
 Google permite añadir subdominios de plataformas incluidas en la [Public Suffix List](https://support.google.com/adsense/answer/12170421); `pages.dev` figura en ella. Puedes presentar `cvonline-zw0.pages.dev` sin comprar primero un dominio. La aprobación depende de la revisión del sitio y de la cuenta. Si el formulario inicial de alta rechaza el subdominio, crea la cuenta con la opción «No tengo un sitio todavía» y añade después la dirección desde **Sitios**.
 
 1. En AdSense, abre **Sitios → Nuevo sitio** y añade `cvonline-zw0.pages.dev`.
-2. Obtén el ID público de editor y configura `VITE_ADSENSE_CLIENT`; conserva `VITE_ADSENSE_READY=false` y vuelve a desplegar.
-3. Selecciona el método de [verificación por etiqueta meta](https://support.google.com/adsense/answer/7584263). Comprueba `google-adsense-account` en el HTML y `/ads.txt` con el ID correcto; ambos se generan sin ejecutar anuncios.
+2. El fragmento público utiliza `ca-pub-7507181626477156`. Si cambias de cuenta, configura `VITE_ADSENSE_CLIENT` y vuelve a desplegar.
+3. Selecciona **Fragmento de código de AdSense**, confirma «Coloqué el código» y pulsa **Verificar**. El script ya figura en el HTML inicial de las páginas públicas. También están disponibles el meta `google-adsense-account` y `/ads.txt` como [métodos alternativos](https://support.google.com/adsense/answer/7584263).
 4. En el panel, confirma la verificación y solicita la revisión. La API pública de AdSense permite consultar sitios, pero no añadirlos ni solicitar revisión. Estos pasos requieren acceder a la cuenta de Google.
 5. Configura el mensaje de consentimiento europeo certificado de Google u otra CMP admitida. La elección del sitio no sustituye una CMP.
 
@@ -112,10 +112,10 @@ Antes de habilitar los anuncios:
 - Solicita y obtén la aprobación del sitio en AdSense con la dirección que realmente utilizarás.
 - Completa el responsable y el contacto público y actualiza la información de privacidad según la configuración real.
 - Configura una plataforma o mensaje de consentimiento certificado por Google cuando las políticas y mercados atendidos lo requieran. El aviso de elección de CVonline **no es una CMP certificada**.
-- Introduce el `VITE_ADSENSE_CLIENT` real y cambia `VITE_ADSENSE_READY` a `true`; vuelve a compilar.
+- Revisa los ajustes publicitarios y anuncios automáticos de la cuenta. `VITE_ADSENSE_READY` solo afecta al componente opcional de la interfaz; el fragmento estático ya se carga en público.
 - Verifica que los anuncios se cargan únicamente en páginas públicas y que entrar al editor crea un documento limpio de código publicitario antes de introducir datos.
 
-La compilación genera el meta `google-adsense-account` y `ads.txt` cuando se configura un cliente válido, incluso con `VITE_ADSENSE_READY=false`. Así se puede comprobar la propiedad sin cargar publicidad. Comprueba su contenido y acceso público junto con las instrucciones de tu cuenta.
+La compilación genera el meta `google-adsense-account` y `ads.txt` cuando se configura un cliente válido, incluso con `VITE_ADSENSE_READY=false`. El fragmento de verificación estático se carga independientemente de ese indicador. Comprueba su contenido y acceso público junto con las instrucciones de tu cuenta.
 
 El loader ya previsto es un punto de integración; la aceptación de AdSense, la CMP y su funcionamiento efectivo deben verificarse después de configurar la cuenta real. No son parte de una aprobación automática proporcionada por este repositorio.
 

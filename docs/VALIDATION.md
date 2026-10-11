@@ -13,7 +13,7 @@ Las comprobaciones se realizaron con Node.js 24, npm, Chromium y Poppler. La com
 - Interfaz: 48 casos de tipo, catálogo y revisión en cuatro idiomas y anchos de 320, 390, 768 y 1440 px; 96 selecciones de fuente y cero errores o desbordamientos.
 - Exportaciones: 62 PDF y 62 Word, incluidos los ocho tipos, las seis fuentes, diez variantes y cuatro currículums extensos de 9–10 páginas. Se verificaron títulos, subtítulos, viñetas, textos y fotos.
 - Tipografías: 12 TTF estáticos y 12 WOFF2, pesos 400/700, permiso de incrustación, caracteres acentuados y símbolo del euro, equivalencia de contornos y hashes del manifiesto.
-- Configuración pública: 52 URL en el sitemap y enlaces canónicos con el dominio real; publicidad desactivada y sin identificadores de Google inventados.
+- Configuración pública: 52 URL en el sitemap y enlaces canónicos con el dominio real. El propietario proporcionó su ID de AdSense; el fragmento se incluye en las páginas públicas y el editor conserva un documento sin código de publicidad.
 - Verificación Google: 260 comprobaciones de HTML en cinco configuraciones temporales; metadatos de Search Console, meta AdSense y `ads.txt` independientes de la activación de anuncios. Los identificadores de prueba no entraron al despliegue.
 - Runtime local: gzip de 3.695.787 bytes que recupera exactamente los 14.264.838 bytes originales, SHA-256 `06ba057753da3847e4c24f02d91ab133455b0817c69a44993a9a53a2146df9e3`. Siete escenarios de navegador aprobados, incluidos ambos tipos de hosting, rechazos de archivos inválidos y una inferencia CPU real mediante la API pública de Transformers.js con un modelo Identity. Cero peticiones externas y cero violaciones del CSP del editor.
 - Galería HTML independiente: 18 capturas actuales de escritorio y móvil; todas las imágenes decodifican, funciona sin solicitudes HTTP y no desborda a 320 px.
@@ -44,4 +44,13 @@ La suite final `CI=true npm test -- --retries=0` completó **20 pruebas aprobada
 
 Las peticiones HTTPS desde este entorno al dominio público devolvieron HTTP 403 y `error code: 1010`, incluso antes del despliegue. La API confirma la publicación, pero esta respuesta no permite dar por comprobado el acceso público desde un navegador externo. Las pruebas funcionales de producción se completaron en el entorno local.
 
-**AdSense y Search Console no se han dado de alta ni verificado en una cuenta de Google.** El soporte técnico de los metadatos está listo, pero faltan los códigos reales, los datos públicos de contacto y el acceso a los paneles. La publicidad permanece desactivada. El dominio gratuito puede presentarse como sitio en AdSense porque `pages.dev` aparece en la Public Suffix List; la aprobación la decide Google.
+**La confirmación de AdSense y Search Console en los paneles corresponde al propietario.** El fragmento de AdSense con el ID real ya está preparado. No se ha afirmado ni solicitado una aprobación automática de Google. El dominio gratuito puede presentarse como sitio en AdSense porque `pages.dev` aparece en la Public Suffix List; la aprobación la decide Google.
+
+
+## Fragmento de AdSense solicitado por el propietario
+
+El `<head>` público incluye exactamente la URL `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7507181626477156`, con `async` y `crossorigin="anonymous"`. Se comprobaron los 52 HTML públicos, el meta de la cuenta y `ads.txt` con `pub-7507181626477156`.
+
+`editor.html` no contiene el script. Los rewrites de Cloudflare se limitan a las rutas privadas, y el arranque de una URL antigua de selección de diseño abre un documento limpio antes de mostrar formularios. El servidor de desarrollo y el preview reproducen esa separación.
+
+Para este cambio pasaron **cuatro pruebas seleccionadas, sin reintentos**: fragmento inicial público y ejecución única controlada; entrada al editor sin conservar el código externo; privacidad de respuestas, recarga y reinicio; recorrido Word en español y requisitos de las rutas privadas. El navegador de prueba sustituyó la respuesta de Google por un script controlado, sin contactar sus servidores. También se comprobó por HTTP el desarrollo: portada con el fragmento y lenguaje, perfil y formulario sin él.
