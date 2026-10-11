@@ -338,6 +338,7 @@ test('all 400 unique designs, type filters and public information are reachable'
   await page.getByRole('link', { name: es.navHow, exact: true }).click();
   await expect(page.locator('.how-card')).toHaveCount(3);
   await page.getByRole('link', { name: es.navGuides, exact: true }).click();
+  await expect(page.locator('.article-card').nth(5)).toBeVisible();
   expect(await page.locator('.article-card').count()).toBeGreaterThanOrEqual(6);
   await page.locator('.article-card').first().click();
   expect((await page.locator('.article-body').innerText()).length).toBeGreaterThan(1000);

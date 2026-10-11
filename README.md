@@ -41,7 +41,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` comprueba TypeScript, copia los recursos WebAssembly desde la dependencia instalada, genera la aplicación y prerenderiza 52 páginas públicas en `dist/`. Las pantallas con datos del usuario continúan funcionando en el navegador. `npm run preview` sirve el resultado compilado; no sustituye una comprobación en el alojamiento final.
+`npm run build` comprueba TypeScript, prepara los recursos WebAssembly desde la dependencia instalada, genera la aplicación y prerenderiza 52 páginas públicas en `dist/`. El binario se distribuye comprimido en gzip, con una comprobación de igualdad byte a byte; el navegador lo descomprime en memoria mediante `DecompressionStream` y lo entrega a la opción oficial `wasmBinary` de ONNX Runtime. Las pantallas con datos del usuario continúan funcionando en el navegador. `npm run preview` sirve el resultado compilado; no sustituye una comprobación en el alojamiento final.
 
 ## Pruebas
 
@@ -65,7 +65,8 @@ La aplicación puede ejecutarse sin variables. Para configurar la publicación, 
 | `VITE_SITE_URL` | Origen HTTPS real publicado, sin ruta. Genera las URL canónicas, alternativas por idioma y `sitemap.xml`. Déjala vacía mientras no exista una dirección definitiva. |
 | `VITE_OPERATOR_NAME` | Nombre real del responsable de la web, mostrado en las páginas informativas. Completar antes de publicar. |
 | `VITE_CONTACT_EMAIL` | Correo público real de contacto. Completar antes de publicar. |
-| `VITE_ADSENSE_CLIENT` | Identificador público asignado por AdSense, con formato `ca-pub-` y 16 dígitos. No inventar uno. |
+| `VITE_ADSENSE_CLIENT` | Identificador público asignado por AdSense, con formato `ca-pub-` y 16 dígitos. Genera el meta de verificación y `ads.txt` sin activar anuncios. No inventar uno. |
+| `VITE_GOOGLE_SITE_VERIFICATION` | Valor público `content` de la etiqueta HTML proporcionada por Search Console para verificar la propiedad Prefijo de URL. |
 | `VITE_ADSENSE_READY` | `false` por defecto. Cambiar a `true` únicamente después de la aprobación y configuración de consentimiento necesarias. |
 
 Los cambios de estas variables requieren una nueva compilación. Consulta [tipos y fuentes de diseño](docs/CV_TYPES.md), [despliegue en Cloudflare](docs/CLOUDFLARE.md) y [tratamiento de datos](docs/PRIVACY.md).
@@ -100,7 +101,7 @@ public/
   _redirects              Navegación de rutas en Cloudflare Pages
   robots.txt              Exclusión de las pantallas del editor
 scripts/
-  copy-onnx.mjs            Copia del runtime WebAssembly instalado
+  copy-onnx.mjs            Compresión verificada del runtime WebAssembly instalado
 docs/                     Publicación y privacidad
 ```
 

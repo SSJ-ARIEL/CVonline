@@ -12,16 +12,11 @@ npm run deploy:cloudflare
 
 El script usa Wrangler 4.149.0, reutiliza el proyecto `cvonline` o crea uno de Direct Upload, obtiene su dominio real, compila con ese origen y publica `dist` en la rama de producción `main`. Puedes cambiar el nombre con `CLOUDFLARE_PAGES_PROJECT`. El código permanece en GitHub. Con Direct Upload, las actualizaciones se publican ejecutando de nuevo este comando; no se conectan automáticamente a cada push. Cloudflare no permite convertir después ese proyecto a integración Git: si prefieres compilación automática, crea desde el inicio un proyecto conectado a Git siguiendo la sección siguiente. Los proyectos Git existentes también admiten despliegues manuales con Wrangler.
 
-## Subir el ZIP desde el panel
+## Archivo ZIP opcional
 
-El entorno de Codex preparó la compilación completa y creó el proyecto `cvonline`, pero su proxy rechazó la carga del WASM grande. El proyecto todavía no tiene despliegues. El archivo entregado `CVonline-cloudflare.zip` contiene los 234 archivos originales de `dist`, incluidas fuentes, HTML, JavaScript, WebAssembly, `_headers` y `_redirects`; no contiene credenciales ni datos de visitantes.
+El despliegue directo evita tener que descargar un ZIP. La compilación distribuye el runtime local en gzip: el navegador recupera el binario original en memoria mediante `DecompressionStream` y la opción oficial `wasmBinary` de ONNX Runtime. El build verifica que la descompresión conserva todos los bytes de la dependencia instalada. Esto reduce el archivo de aproximadamente 14,3 MB a 3,7 MB sin quitar la traducción ni alterar el runtime.
 
-1. En Cloudflare, abre **Workers & Pages → cvonline**.
-2. Selecciona **Create deployment** y el entorno **Production**.
-3. Sube `CVonline-cloudflare.zip` y confirma **Deploy**. El ZIP contiene los archivos directamente en su raíz; no añadas una carpeta superior.
-4. Cuando Cloudflare indique éxito, abre **https://cvonline-zw0.pages.dev** y realiza las comprobaciones de la sección 6.
-
-Esta carga se realiza desde el navegador del propietario, fuera del transporte de Codex. No requiere volver a crear un token API. El ZIP se compiló con el origen real para que los enlaces canónicos y el sitemap sean correctos. El código completo está guardado en la rama `main` de GitHub.
+Si prefieres cargar una compilación manualmente, genera un ZIP con el contenido de `dist` directamente en su raíz y súbelo en **Workers & Pages → cvonline → Create deployment → Production**. No incluyas `node_modules`, credenciales, archivos `.env` ni una carpeta superior. Usa siempre una compilación reciente con el dominio real; un ZIP anterior puede contener archivos obsoletos.
 
 ## 1. Conectar el repositorio
 
@@ -44,7 +39,7 @@ Pages instala las dependencias antes de compilar. El repositorio incluye `packag
 
 El instalador de ONNX incluye componentes para otros entornos. `skip` evita descargar CUDA, que la traducción de esta web no utiliza. Configura la variable **antes de la instalación**, no únicamente en el comando final de compilación. Mantén las comprobaciones TLS y de integridad de npm activadas.
 
-El build prepara la aplicación, copia el runtime WebAssembly instalado y genera 52 documentos HTML públicos en cuatro idiomas. El directorio temporal `.prerender/`, `node_modules/` y los archivos locales de entorno están excluidos de Git.
+El build prepara la aplicación, prepara una copia comprimida y verificada del runtime WebAssembly instalado y genera 52 documentos HTML públicos en cuatro idiomas. El directorio temporal `.prerender/`, `node_modules/` y los archivos locales de entorno están excluidos de Git.
 
 ## 3. Definir los datos reales del sitio
 
@@ -54,9 +49,10 @@ Completa las variables públicas indicadas en `.env.example` para producción y,
 - `VITE_CONTACT_EMAIL`: correo público real de contacto.
 - `VITE_SITE_URL`: origen HTTPS definitivo, sin rutas ni parámetros.
 - `VITE_ADSENSE_READY=false`: mantener mientras no esté lista la monetización.
-- `VITE_ADSENSE_CLIENT`: dejar vacío hasta disponer del identificador real asignado por Google.
+- `VITE_ADSENSE_CLIENT`: identificador público real `ca-pub-…`; genera la verificación HTML y `ads.txt` sin activar anuncios.
+- `VITE_GOOGLE_SITE_VERIFICATION`: solo el valor `content` de la etiqueta HTML de Search Console, no la etiqueta completa.
 
-No incluyas secretos en variables `VITE_*`: se incorporan al JavaScript público. Los datos del responsable y contacto no han sido inventados; el propietario debe proporcionarlos antes de la publicación.
+No incluyas secretos en variables `VITE_*`: se incorporan al JavaScript público. Los datos del responsable y contacto no se inventan; el propietario debe proporcionarlos para completar las páginas informativas y solicitar monetización.
 
 En el primer despliegue todavía puede no conocerse la dirección asignada. Puedes dejar `VITE_SITE_URL` vacío, comprobar la URL real del proyecto y volver a compilar con ese origen. Mientras esté vacío, no se generan enlaces canónicos ni sitemap con una dirección supuesta.
 
@@ -99,11 +95,19 @@ Comprueba en escritorio y móvil:
 
 La traducción de respaldo requiere acceso HTTPS a Hugging Face y a su CDN de archivos. En el entorno de desarrollo, un CDN devolvió HTTP 403 y no permitió verificar la inferencia completa. Una compilación correcta por sí sola no acredita que se puedan descargar o ejecutar los modelos en el dispositivo del visitante. No deshabilites TLS ni cambies a un servicio remoto que reciba los datos del currículum para resolverlo.
 
-## 7. Preparar AdSense posteriormente
+## 7. Verificar AdSense y solicitar revisión
 
 Mantén la publicidad desactivada hasta tener una web pública revisada y la autorización correspondiente de Google. El contenido original y una interfaz funcional ayudan a presentar un sitio completo, pero ningún alojamiento o dominio garantiza aprobación o ingresos.
 
-Antes de habilitarlo:
+Google permite añadir subdominios de plataformas incluidas en la [Public Suffix List](https://support.google.com/adsense/answer/12170421); `pages.dev` figura en ella. Puedes presentar `cvonline-zw0.pages.dev` sin comprar primero un dominio. La aprobación depende de la revisión del sitio y de la cuenta. Si el formulario inicial de alta rechaza el subdominio, crea la cuenta con la opción «No tengo un sitio todavía» y añade después la dirección desde **Sitios**.
+
+1. En AdSense, abre **Sitios → Nuevo sitio** y añade `cvonline-zw0.pages.dev`.
+2. Obtén el ID público de editor y configura `VITE_ADSENSE_CLIENT`; conserva `VITE_ADSENSE_READY=false` y vuelve a desplegar.
+3. Selecciona el método de [verificación por etiqueta meta](https://support.google.com/adsense/answer/7584263). Comprueba `google-adsense-account` en el HTML y `/ads.txt` con el ID correcto; ambos se generan sin ejecutar anuncios.
+4. En el panel, confirma la verificación y solicita la revisión. La API pública de AdSense permite consultar sitios, pero no añadirlos ni solicitar revisión. Estos pasos requieren acceder a la cuenta de Google.
+5. Configura el mensaje de consentimiento europeo certificado de Google u otra CMP admitida. La elección del sitio no sustituye una CMP.
+
+Antes de habilitar los anuncios:
 
 - Solicita y obtén la aprobación del sitio en AdSense con la dirección que realmente utilizarás.
 - Completa el responsable y el contacto público y actualiza la información de privacidad según la configuración real.
@@ -111,6 +115,19 @@ Antes de habilitarlo:
 - Introduce el `VITE_ADSENSE_CLIENT` real y cambia `VITE_ADSENSE_READY` a `true`; vuelve a compilar.
 - Verifica que los anuncios se cargan únicamente en páginas públicas y que entrar al editor crea un documento limpio de código publicitario antes de introducir datos.
 
-La compilación genera `ads.txt` cuando se configura un cliente válido y `VITE_ADSENSE_READY=true`. Comprueba su contenido y acceso público junto con las instrucciones específicas de la cuenta de AdSense. No habilites el indicador únicamente para generar ese archivo.
+La compilación genera el meta `google-adsense-account` y `ads.txt` cuando se configura un cliente válido, incluso con `VITE_ADSENSE_READY=false`. Así se puede comprobar la propiedad sin cargar publicidad. Comprueba su contenido y acceso público junto con las instrucciones de tu cuenta.
 
 El loader ya previsto es un punto de integración; la aceptación de AdSense, la CMP y su funcionamiento efectivo deben verificarse después de configurar la cuenta real. No son parte de una aprobación automática proporcionada por este repositorio.
+
+
+## 8. Search Console
+
+1. En [Search Console](https://search.google.com/search-console), añade una propiedad **Prefijo de URL** con `https://cvonline-zw0.pages.dev/`. No elijas propiedad Dominio: no controlas el DNS de `pages.dev`.
+2. Selecciona **Etiqueta HTML** y copia el valor `content` de `google-site-verification` a `VITE_GOOGLE_SITE_VERIFICATION`. Es un código de verificación público; no necesita una contraseña en el repositorio.
+3. Vuelve a desplegar. Confirma que el meta aparece en el HTML original de la portada, no solo después de ejecutar JavaScript.
+4. Pulsa **Verificar** en la cuenta de Google. Mantén el meta en los siguientes despliegues.
+5. En **Sitemaps**, envía `https://cvonline-zw0.pages.dev/sitemap.xml`.
+
+El sitemap contiene las 52 páginas públicas y excluye las pantallas de datos personales. Publicar o enviar el sitemap no garantiza indexación. La API de Search Console requiere autorización OAuth de la cuenta propietaria; el token de Cloudflare no concede acceso a Google.
+
+Referencias oficiales: [verificación HTML](https://support.google.com/webmasters/answer/9008080), [sitemaps](https://support.google.com/webmasters/answer/7451001) y [consentimiento certificado](https://support.google.com/adsense/answer/13554116).

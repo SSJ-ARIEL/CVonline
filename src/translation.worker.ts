@@ -1,5 +1,6 @@
 import type { Locale } from './model';
 import type { TranslationErrorCode, TranslationProgress } from './translation';
+import { loadLocalWasmBinary } from './wasm-runtime';
 
 // Model cards, supported languages and licenses:
 // https://huggingface.co/Helsinki-NLP/opus-mt-ROMANCE-en (Apache-2.0)
@@ -57,14 +58,14 @@ scope.onmessage = async (event: MessageEvent<{ texts: string[]; from: Locale; to
     env.remotePathTemplate = '{model}/resolve/{revision}/';
     if (env.backends.onnx.wasm) {
       env.backends.onnx.wasm.numThreads = 1;
-      // These verified dependency assets are copied into public/onnx during build.
+      // The build compresses the dependency's unchanged binary for smaller uploads.
       const runtime = `${scope.location.origin}${import.meta.env.BASE_URL}onnx/`;
-      // The CPU-only runtime stays below Cloudflare Pages' 25 MB per-file limit.
-      // No WebGPU/JSEP/asyncify runtime is needed for the explicit WASM device.
       env.backends.onnx.wasm.wasmPaths = {
         mjs: `${runtime}ort-wasm-simd-threaded.mjs`,
-        wasm: `${runtime}ort-wasm-simd-threaded.wasm`,
       };
+      // wasmBinary is ONNX Runtime's public override. Decompression stays in RAM;
+      // the browser never needs an uncompressed runtime asset or a third-party URL.
+      env.backends.onnx.wasm.wasmBinary = await loadLocalWasmBinary(`${runtime}ort-wasm-simd-threaded.wasm.gz`);
       env.backends.onnx.wasm.proxy = false;
     }
 
