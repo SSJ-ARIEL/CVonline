@@ -12,6 +12,17 @@ npm run deploy:cloudflare
 
 El script usa Wrangler 4.149.0, reutiliza el proyecto `cvonline` o crea uno de Direct Upload, obtiene su dominio real, compila con ese origen y publica `dist` en la rama de producción `main`. Puedes cambiar el nombre con `CLOUDFLARE_PAGES_PROJECT`. El código permanece en GitHub. Con Direct Upload, las actualizaciones se publican ejecutando de nuevo este comando; no se conectan automáticamente a cada push. Cloudflare no permite convertir después ese proyecto a integración Git: si prefieres compilación automática, crea desde el inicio un proyecto conectado a Git siguiendo la sección siguiente. Los proyectos Git existentes también admiten despliegues manuales con Wrangler.
 
+## Subir el ZIP desde el panel
+
+El entorno de Codex preparó la compilación completa y creó el proyecto `cvonline`, pero su proxy rechazó la carga del WASM grande. El proyecto todavía no tiene despliegues. El archivo entregado `CVonline-cloudflare.zip` contiene los 234 archivos originales de `dist`, incluidas fuentes, HTML, JavaScript, WebAssembly, `_headers` y `_redirects`; no contiene credenciales ni datos de visitantes.
+
+1. En Cloudflare, abre **Workers & Pages → cvonline**.
+2. Selecciona **Create deployment** y el entorno **Production**.
+3. Sube `CVonline-cloudflare.zip` y confirma **Deploy**. El ZIP contiene los archivos directamente en su raíz; no añadas una carpeta superior.
+4. Cuando Cloudflare indique éxito, abre **https://cvonline-zw0.pages.dev** y realiza las comprobaciones de la sección 6.
+
+Esta carga se realiza desde el navegador del propietario, fuera del transporte de Codex. No requiere volver a crear un token API. El ZIP se compiló con el origen real para que los enlaces canónicos y el sitemap sean correctos. El código completo está guardado en la rama `main` de GitHub.
+
 ## 1. Conectar el repositorio
 
 En la cuenta de Cloudflare, abre **Workers & Pages** y crea un proyecto de **Pages** conectado a Git. Autoriza el acceso al repositorio de GitHub que contiene CVonline y selecciona `main` como rama de producción. Los nombres de las opciones pueden variar según la versión del panel.

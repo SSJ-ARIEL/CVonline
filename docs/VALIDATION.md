@@ -34,6 +34,8 @@ Se verificaron los tokenizadores reales, preparación de idiomas, ejecución CPU
 
 ## Publicación
 
-El acceso a Cloudflare y la creación del proyecto Pages `cvonline` se verificaron mediante la API. La confirmación del despliegue se registra después de subir los archivos. El acceso HTTPS al dominio desde este entorno devolvió una denegación del proxy de red; ese resultado no acredita un fallo del sitio público.
+El acceso a Cloudflare y la creación del proyecto Pages `cvonline` se verificaron mediante la API. **El sitio todavía no está publicado: el proyecto tiene cero despliegues.** El proxy del entorno rechazó la carga del archivo WASM con HTTP 401 y el mensaje de autenticación de la integración `codex-secret-api.cloudflare.com`. Dos lotes pequeños fueron aceptados; también falló el WASM aislado (14.26 MB original y aproximadamente 19.02 MB en base64). Una comprobación no mutante de transporte gzip devolvió HTTP 400. No se deshabilitaron comprobaciones ni se omitieron recursos del build.
+
+La publicación requiere subir el ZIP completo desde el panel de Cloudflare siguiendo [las instrucciones](CLOUDFLARE.md#subir-el-zip-desde-el-panel). Las credenciales ya autenticaron operaciones; este bloqueo no justifica solicitar otro token. El acceso HTTPS al dominio desde el entorno también está restringido por el proxy. Tras el despliegue manual deben comprobarse el acceso público y los recursos en la dirección asignada.
 
 El dominio independiente y la activación de AdSense quedan para una etapa posterior con los datos reales de la cuenta. No se solicitó ni se obtuvo aprobación de Google.
