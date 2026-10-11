@@ -12,6 +12,7 @@ import {
   TextRun,
 } from 'docx';
 import type { ResumeData, ResumeSettings } from '../model';
+import { getResumeFont } from '../fonts';
 import { accentInkColor, accentTextColor, getTemplate } from '../templates';
 import { fileName, resumeLabels, resumeSections, safeFontSize, safeUrl } from '../resume-text';
 
@@ -19,14 +20,15 @@ import { fileName, resumeLabels, resumeSections, safeFontSize, safeUrl } from '.
 export async function createDocxBlob(data: ResumeData, settings: ResumeSettings): Promise<Blob> {
   const template = getTemplate(settings.templateId);
   const labels = resumeLabels(settings.locale);
-  const font = template.font === 'serif' ? 'Cambria' : 'Calibri';
+  const font = getResumeFont(settings.fontFamily, template.font).fontWordName;
+  const variant = template.layoutVariant;
   const accent = /^[\da-f]{6}$/i.test(settings.accent.replace(/^#/, ''))
     ? settings.accent.replace(/^#/, '').toUpperCase()
     : template.accent.replace(/^#/, '').toUpperCase();
   const inkAccent = accentInkColor(`#${accent}`).slice(1).toUpperCase();
   const pointSize = safeFontSize(settings.fontSize);
   const bodySize = Math.round(pointSize * 2);
-  const centered = template.header === 'center';
+  const centered = template.header === 'center' || variant === 'centered-labels';
   const treatment = template.treatment;
   const filledHeader = template.header === 'band' || treatment === 'rail';
   const headerFill = accent;
@@ -56,9 +58,13 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
       heading: HeadingLevel.HEADING_1,
       keepNext: true,
       spacing: { before: 230, after: 110 },
+      ...(variant === 'centered-labels' ? { alignment: AlignmentType.CENTER } : {}),
+      ...(variant === 'label-column' ? { indent: { left: 200, right: 2200 } } : {}),
+      ...(variant === 'inset-heading' ? { indent: { left: 150, right: 150 }, shading: { type: ShadingType.CLEAR, fill: 'EEF1F4', color: 'auto' } } : {}),
       ...(template.sectionStyle === 'line' || template.sectionStyle === 'bar' ? {
         border: { bottom: { color: accent, size: template.sectionStyle === 'bar' ? 12 : 4, style: BorderStyle.SINGLE, space: 4 } },
       } : {}),
+      ...(variant === 'section-panels' ? { border: { top: { color: accent, size: 4, style: BorderStyle.SINGLE, space: 6 }, bottom: { color: accent, size: 4, style: BorderStyle.SINGLE, space: 6 } } } : {}),
     }));
   };
   const addEntryTitle = (primary: string, secondary?: string, projectCard = false) => {
@@ -89,7 +95,7 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     spacing: { after: 100 },
   }));
   if (data.personal.name.trim()) paragraphs.push(new Paragraph({
-    children: [new TextRun({ text: clean(data.personal.name), font:treatment==='portfolio'?'Cambria':font, bold: !['editorial','portfolio','formal'].includes(treatment), size: treatment==='editorial'||treatment==='portfolio'?60:48, color: filledHeader ? headerText : treatment==='portfolio'?inkAccent:'202830' })],
+    children: [new TextRun({ text: clean(data.personal.name), font:treatment==='portfolio'&&settings.fontFamily==='auto'?'Cambria':font, bold: !['editorial','portfolio','formal'].includes(treatment), size: treatment==='editorial'||treatment==='portfolio'?60:48, color: filledHeader ? headerText : treatment==='portfolio'?inkAccent:'202830' })],
     alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
     keepNext: true,
     spacing: { after: 95 },
@@ -100,6 +106,9 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
         bottom: { style: BorderStyle.SINGLE, color: headerFill, size: 12, space: 8 },
       },
     } : {}),
+    ...(variant==='split-masthead'?{indent:{left:220},border:{left:{style:BorderStyle.SINGLE,color:accent,size:16,space:8}}}:{}),
+    ...(variant==='top-rule'?{border:{top:{style:BorderStyle.SINGLE,color:accent,size:16,space:10}}}:{}),
+    ...(variant==='bordered-header'?{border:{top:{style:BorderStyle.SINGLE,color:accent,size:5,space:8},bottom:{style:BorderStyle.SINGLE,color:accent,size:5,space:8},left:{style:BorderStyle.SINGLE,color:accent,size:5,space:8},right:{style:BorderStyle.SINGLE,color:accent,size:5,space:8}}}:{}),
   }));
   if (data.personal.headline.trim()) paragraphs.push(new Paragraph({
     children: [run(data.personal.headline, { size: bodySize + 4, color: inkAccent })],
@@ -125,6 +134,7 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
     spacing: { after: 140, line: 280 },
     border: { bottom: { color: accent, style: BorderStyle.SINGLE, size: 5, space: 8 } },
+    ...(variant==='contact-strip'?{border:{top:{style:BorderStyle.SINGLE,color:accent,size:4,space:6},bottom:{style:BorderStyle.SINGLE,color:accent,size:4,space:6}}}:{}),
   }));
 
   // Preserve the selected CV structure in editable, flowing paragraphs. Two
@@ -136,8 +146,8 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
       continue;
     }
     for (const entry of section.entries) {
-      const dateFirst = treatment==='timeline' && ['experience','education','certifications'].includes(section.id);
-      if (dateFirst&&entry.date) paragraphs.push(paragraph(entry.date, { color: inkAccent, size: Math.max(16, bodySize - 2) }));
+      const dateFirst = variant==='date-column' || treatment==='timeline' && ['experience','education','certifications'].includes(section.id);
+      if (dateFirst&&entry.date) paragraphs.push(variant==='date-column'?new Paragraph({children:[run(entry.date,{color:inkAccent,size:Math.max(16,bodySize-2)})],alignment:AlignmentType.RIGHT,keepNext:true,spacing:{after:45}}):paragraph(entry.date, { color: inkAccent, size: Math.max(16, bodySize - 2) }));
       if (entry.title) addEntryTitle(entry.title,undefined,treatment==='portfolio'&&section.id==='projects');
       if (entry.subtitle) paragraphs.push(paragraph(entry.subtitle, { color: '59616B', size: Math.max(16, bodySize - 2) }));
       if (!dateFirst&&entry.date) paragraphs.push(paragraph(entry.date, { color: '59616B', size: Math.max(16, bodySize - 2) }));
@@ -153,12 +163,16 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
     creator: 'CVonline',
     title: data.personal.name ? `${labels.profile} — ${clean(data.personal.name)}` : 'CVonline',
     description: 'CVonline',
-    styles: { default: { document: { run: { font, size: bodySize, color: '202830' } } } },
+    styles: { default: {
+      document: { run: { font, size: bodySize, color: '202830' } },
+      heading1: { run: { font, bold: true, size: bodySize + 2, color: inkAccent } },
+      hyperlink: { run: { font } },
+    } },
     sections: [{
       properties: {
         page: {
           size: settings.paper === 'LETTER' ? { width: 12240, height: 15840 } : { width: 11906, height: 16838 },
-          margin: { top: 850, bottom: 850, left: 950, right: 950 },
+          margin: { top: 850, bottom: 850, left: template.pageInset==='narrow'?720:template.pageInset==='generous'?1120:950, right: template.pageInset==='narrow'?720:template.pageInset==='generous'?1120:950 },
           ...(treatment==='frame'?{borders:{
             pageBorders:{offsetFrom:PageBorderOffsetFrom.PAGE},
             pageBorderTop:{color:accent,size:4,space:20,style:BorderStyle.SINGLE},

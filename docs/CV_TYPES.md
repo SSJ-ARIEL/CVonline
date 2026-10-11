@@ -1,19 +1,23 @@
 # Tipos de CV y criterios de diseño
 
-Después del idioma, CVonline pregunta qué enfoque quiere utilizar el visitante. Cada opción explica su organización y cuándo resulta útil. A continuación se muestran únicamente los tres diseños compatibles con esa elección, antes de comenzar las preguntas. Es posible cambiar de tipo o diseño durante la revisión conservando las respuestas y la foto en memoria.
+Después del idioma, CVonline pregunta qué enfoque quiere utilizar el visitante. Cada opción explica su organización y cuándo resulta útil. A continuación se muestran únicamente los 50 diseños compatibles con esa elección, antes de comenzar las preguntas. Es posible cambiar de tipo o diseño durante la revisión conservando las respuestas y la foto en memoria.
 
-El catálogo ofrece ocho enfoques y 24 diseños originales. Las estructuras cronológica, funcional y mixta se combinan con contextos profesionales y referencias de presentación. Harvard es una referencia de estilo universitario; europeo es una adaptación de principios de organización habituales en Europa. Estas opciones no son formatos oficiales ni implican aval institucional.
+El catálogo ofrece ocho enfoques y 400 diseños originales. Las estructuras cronológica, funcional y mixta se combinan con contextos profesionales y referencias de presentación. Harvard es una referencia de estilo universitario; europeo es una adaptación de principios de organización habituales en Europa. Estas opciones no son formatos oficiales ni implican aval institucional.
 
 | Enfoque | Organización y uso | Diseños |
 | --- | --- | --- |
-| Harvard | Presentación sobria en una columna; formación y experiencia con logros concretos. Útil para primeras oportunidades, consultoría y candidaturas corporativas. | Cambridge, Quincy, Beacon |
-| Cronológico inverso | Experiencia más reciente primero, con fechas y evolución profesional. Para una trayectoria relacionada con el puesto. | Atlas, Prism, Monarch |
-| Funcional | Competencias y proyectos antes de la experiencia fechada. Para capacidades transferibles o cambios de profesión. | Focus, Bridge, Momentum |
-| Mixto | Competencias iniciales y trayectoria detallada después. Para mostrar capacidades y evolución profesional. | Summit, Nexus, Regent |
-| Académico | Formación, secciones de investigación, docencia o publicaciones y proyectos. Admite extensión según la oportunidad. | Scholar, Index, Archive |
-| Europeo | Experiencia, formación, idiomas y competencias con etiquetas claras. Inspirado en la organización de Europass, con diseños propios. | Europa, Continental, Meridian |
-| Técnico | Competencias y proyectos antes de la experiencia. Para programación, ingeniería y perfiles técnicos. | Signal, Orbit, Vector |
-| Creativo | Proyectos y portafolio destacados con mayor personalidad visual. Para diseño, comunicación y revisión directa de trabajos. | Studio, Muse, Canvas |
+| Harvard | Presentación sobria en una columna; formación y experiencia con logros concretos. Útil para primeras oportunidades, consultoría y candidaturas corporativas. | Cambridge, Quincy, Beacon, Oxford, Winthrop |
+| Cronológico inverso | Experiencia más reciente primero, con fechas y evolución profesional. Para una trayectoria relacionada con el puesto. | Atlas, Prism, Monarch, Cascade, Chronicle |
+| Funcional | Competencias y proyectos antes de la experiencia fechada. Para capacidades transferibles o cambios de profesión. | Focus, Bridge, Momentum, Clarity, Transfer |
+| Mixto | Competencias iniciales y trayectoria detallada después. Para mostrar capacidades y evolución profesional. | Summit, Nexus, Regent, Vantage, Integral |
+| Académico | Formación, secciones de investigación, docencia o publicaciones y proyectos. Admite extensión según la oportunidad. | Scholar, Index, Archive, Thesis, Annals |
+| Europeo | Experiencia, formación, idiomas y competencias con etiquetas claras. Inspirado en la organización de Europass, con diseños propios. | Europa, Continental, Meridian, Diplomat, Union |
+| Técnico | Competencias y proyectos antes de la experiencia. Para programación, ingeniería y perfiles técnicos. | Signal, Orbit, Vector, Kernel, Matrix |
+| Creativo | Proyectos y portafolio destacados con mayor personalidad visual. Para diseño, comunicación y revisión directa de trabajos. | Studio, Muse, Canvas, Atelier, Composition |
+
+Cada enfoque ofrece cinco composiciones base y diez variantes de organización de cabecera, contactos, rótulos, fechas y secciones. Las diferencias se aplican al diseño real; no se contabilizan cambios de color como diseños adicionales. Los nombres de la tabla muestran las cinco composiciones base de cada enfoque. El catálogo permite buscar y cargar más diseños progresivamente.
+
+Las [seis tipografías](FONTS.md) se pueden elegir en la revisión sin perder las respuestas.
 
 ## Efecto real en el documento
 

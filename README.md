@@ -8,15 +8,18 @@ El recorrido utiliza pantallas independientes: **portada → idioma → tipo de 
 
 ## Funciones
 
-- 24 diseños originales, tres para cada uno de ocho enfoques: Harvard, cronológico inverso, funcional, mixto, académico, europeo, técnico y creativo. La elección del tipo precede al diseño y cambia el orden real de las secciones en la vista previa, PDF y Word.
+- 400 diseños originales, 50 para cada uno de ocho enfoques: Harvard, cronológico inverso, funcional, mixto, académico, europeo, técnico y creativo. La elección del tipo precede al diseño y cambia el orden real de las secciones en la vista previa, PDF y Word.
 - Foto opcional, procesada en el navegador, sin subirla a un servidor.
 - Personalización de color, tamaño del texto y papel A4 o Carta.
+- Seis tipografías adicionales alojadas localmente: Inter, Lato, Montserrat, Source Sans 3, Source Serif 4 y Merriweather. Se incrustan en el PDF; Word utiliza la familia seleccionada si está instalada y puede sustituirla en otro equipo.
 - PDF con texto seleccionable y documentos de varias páginas cuando el contenido lo requiere.
 - Word editable: conserva el contenido y adapta el diseño a una columna para facilitar la edición. No reproduce exactamente las composiciones de dos columnas del PDF.
 - Cuatro idiomas para preguntas, interfaz, guías y títulos del documento; traducción del contenido descriptivo en el dispositivo, sujeta a disponibilidad del navegador y descarga de modelos.
 - Seis guías originales por idioma, además de las páginas de información, privacidad y condiciones.
 
 Las respuestas y la foto solo permanecen en la memoria de la pestaña. **Recargar o cerrar elimina el trabajo.** No hay recuperación de sesiones. La descarga se guarda en el dispositivo donde el usuario decida.
+
+Consulta [las tipografías y sus licencias](docs/FONTS.md).
 
 ## Desarrollo local
 
@@ -86,7 +89,7 @@ src/
   TemplatesPage.tsx        Catálogo de diseños por tipo
   Review.tsx              Revisión y descargas
   ResumePreview.tsx        Vista previa
-  templates.ts            Los 24 diseños originales
+  templates.ts            Los 400 diseños originales
   exports/                Generadores PDF y DOCX
   translation*.ts         Traducción local y worker
   locales/                Textos de los cuatro idiomas

@@ -205,6 +205,132 @@
 .resume-treatment-portfolio .resume-main .resume-tags>span {border:1px solid #dfd4d9;background:none}
 .resume-studio .resume-section h2 {font-size:.79em;letter-spacing:.16em}
 
+
+/* Five additional foundations keep each collection varied in its reading structure. */
+.resume-oxford .resume-header h1 {font-size:3.05em;letter-spacing:-.025em}
+.resume-winthrop .resume-header h1 {font-size:2.85em;letter-spacing:-.02em}
+.resume-cascade .resume-header {border-top:1px solid var(--resume-accent);padding-top:24px}
+.resume-chronicle .resume-section-experience .resume-entry {border-left:2px solid #d9dfe3;padding-left:17px}
+.resume-clarity .resume-section-skills .resume-tags {display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.resume-clarity .resume-section-skills .resume-tags>span {border-left:3px solid var(--resume-accent);padding:9px 12px}
+.resume-transfer .resume-header h1 {font:700 3em/1.08 'DM Sans',Arial,sans-serif;letter-spacing:-.04em}
+.resume-transfer .resume-aside {background:#eef4f2}
+.resume-transfer .resume-main .resume-section-skills .resume-tags {display:grid;grid-template-columns:1fr 1fr}
+.resume-vantage .resume-header h1 {font-size:3em;font-weight:500}
+.resume-integral .resume-aside {padding-top:16px;border-top:2px solid var(--resume-accent)}
+.resume-thesis .resume-header h1 {font-size:3.1em;letter-spacing:-.035em}
+.resume-thesis .resume-section-education .resume-entry {padding-bottom:12px;border-bottom:1px solid #e1e2e5}
+.resume-annals .resume-header h1 {font:400 2.9em/1.1 Georgia,serif;letter-spacing:-.02em}
+.resume-diplomat .resume-header h1 {font-size:2.85em;font-weight:500}
+.resume-diplomat .resume-aside {background:#f1f5f8;padding:20px 17px;border:0}
+.resume-union .resume-section-number {font-weight:700;color:var(--resume-ink-accent)}
+.resume-kernel .resume-header {border-left:0;padding-left:0;border-bottom:2px solid var(--resume-accent);padding-bottom:20px}
+.resume-kernel .resume-main .resume-section-skills .resume-tags>span {font-size:.85em;background:#f1f4f8}
+.resume-matrix .resume-aside {background:#edf4f3}
+.resume-matrix .resume-section-projects .resume-entry {border-left:2px solid var(--resume-accent);padding-left:13px}
+.resume-atelier .resume-header h1 {font:400 3.5em/1.08 'DM Serif Display',Georgia,serif;letter-spacing:-.04em}
+.resume-atelier .resume-section-projects .resume-entry {padding:12px 0;border-bottom:1px solid #ddd8d0}
+.resume-composition .resume-header {justify-content:center;text-align:center}
+.resume-composition .resume-header h1 {font:700 3.4em/1.08 'DM Sans',Arial,sans-serif;letter-spacing:-.05em}
+.resume-composition .resume-contact {justify-content:center}
+.resume-composition .resume-section-projects .resume-entry {border-width:0 0 1px;padding:12px 0 18px}
+
+/* Structural editions. Page spacing and rail width are part of the composition. */
+.resume-page.resume-sidebar-sized .resume-aside {width:var(--resume-sidebar-width)}
+.resume-inset-narrow:not(.resume-treatment-rail) {padding:42px 44px}
+.resume-inset-generous:not(.resume-treatment-rail) {padding:60px 64px}
+.resume-inset-narrow.resume-header-band .resume-header {margin:-42px -44px 28px;padding:38px 44px}
+.resume-inset-generous.resume-header-band .resume-header {margin:-60px -64px 32px;padding:52px 64px}
+.resume-inset-narrow.resume-treatment-rail .resume-main {padding:42px 32px 34px}
+.resume-inset-generous.resume-treatment-rail .resume-main {padding:58px 43px 42px}
+.resume-inset-narrow.resume-treatment-rail .resume-aside {padding-top:42px;padding-left:22px;padding-right:22px}
+.resume-inset-generous.resume-treatment-rail .resume-aside {padding-top:58px;padding-left:26px;padding-right:26px}
+
+/* Contact: a separate horizontal information strip precedes the identity. */
+.resume-contact-strip {padding:10px 12px;margin-bottom:23px;border-top:3px solid var(--resume-accent);border-bottom:1px solid #dce2e6;background:#f2f5f7}
+.resume-contact-strip .resume-contact {gap:5px 16px;font-size:.77em}
+.resume-layout-contact-strip .resume-header {border-bottom:0;padding-bottom:10px;margin-bottom:25px}
+.resume-layout-contact-strip.resume-header-band .resume-contact-strip {margin:-42px -44px 0;padding:14px 44px;border-top:0;border-bottom:0}
+.resume-layout-contact-strip.resume-header-band .resume-header {margin-top:0}
+.resume-layout-contact-strip .resume-main .resume-section-contact {display:none}
+
+/* Signature: contacts and optional portrait form a second masthead column. */
+.resume-layout-split-masthead .resume-header {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,34%);align-items:start;gap:25px;text-align:left}
+.resume-layout-split-masthead .resume-header h1 {font-size:2.75em;line-height:1.12}
+.resume-masthead-details {min-width:0;border-left:1px solid #d7dee3;padding-left:20px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.resume-masthead-details .resume-photo {width:69px;height:82px;border-radius:2px}
+.resume-masthead-details .resume-contact {flex-direction:column;gap:5px;font-size:.76em;justify-content:flex-start}
+.resume-layout-split-masthead.resume-header-band .resume-masthead-details {border-color:currentColor}
+.resume-layout-split-masthead.resume-treatment-rail .resume-header {grid-template-columns:minmax(0,1fr) minmax(0,38%);gap:18px}
+.resume-layout-split-masthead.resume-treatment-rail .resume-header h1 {font-size:2.4em}
+.resume-layout-split-masthead.resume-treatment-rail .resume-masthead-details {padding-left:12px}
+
+/* Index: section labels sit in their own left column beside the content. */
+.resume-layout-label-column .resume-main>.resume-section {display:grid;grid-template-columns:minmax(0,22%) minmax(0,1fr);gap:0 22px;padding:0;background:none;border:0;margin-bottom:29px}
+.resume-layout-label-column .resume-main>.resume-section>h2 {grid-column:1;grid-row:1 / span var(--resume-entry-count);align-self:start;display:flex;flex-direction:column;align-items:flex-start;gap:5px;border:0;border-top:2px solid var(--resume-accent);padding:9px 0 0;margin:0;font-size:.75em;letter-spacing:.075em}
+.resume-layout-label-column .resume-main>.resume-section>.resume-entry,.resume-layout-label-column .resume-main>.resume-section>.resume-tags {grid-column:2;min-width:0}
+.resume-layout-label-column .resume-section-number {width:auto;font-size:1.05em}
+.resume-layout-label-column .resume-main .resume-entry-top {display:block}
+.resume-layout-label-column .resume-main .resume-date {display:block;text-align:left;max-width:none;font-size:.77em;margin-top:3px}
+.resume-layout-label-column .resume-main .resume-section-skills .resume-tags {display:flex;flex-wrap:wrap}
+
+/* Inset: a heading interrupts the outline of each bounded content section. */
+.resume-layout-inset-heading .resume-main>.resume-section {display:block;padding:18px 17px 16px;border:1px solid #d9e0e5;background:#fff;margin-top:13px;margin-bottom:28px}
+.resume-layout-inset-heading .resume-main>.resume-section>h2 {display:flex;width:fit-content;max-width:100%;border:0;margin:-27px 0 12px -5px;padding:0 8px;background:#fff;font-size:.8em;letter-spacing:.08em}
+.resume-layout-inset-heading .resume-main .resume-tags {display:flex;flex-wrap:wrap}
+.resume-layout-inset-heading .resume-main .resume-section-skills .resume-tags {display:flex;flex-wrap:wrap}
+
+/* Prelude: the professional headline leads the name, with rules above each section. */
+.resume-layout-top-rule .resume-header {border-top:4px solid var(--resume-accent);border-bottom:0;border-left:0;padding:19px 0 8px;margin-bottom:27px}
+.resume-layout-top-rule .resume-headline-top {font-size:.77em;letter-spacing:.13em;text-transform:uppercase;font-weight:700;margin:0 0 12px}
+.resume-layout-top-rule .resume-header h1 {margin-bottom:12px;font-size:2.95em}
+.resume-layout-top-rule .resume-section h2 {border-bottom:0;border-left:0;border-top:1px solid #d4dce2;padding:10px 0 0;margin-bottom:13px;font-size:.8em}
+.resume-layout-top-rule.resume-header-band .resume-header {padding:35px 44px;border-top:7px solid var(--resume-ink-accent)}
+.resume-layout-top-rule.resume-treatment-rail .resume-aside h2 {border-color:currentColor}
+
+/* Balance: a stacked, centered masthead and centered labels between fine rules. */
+.resume-layout-centered-labels .resume-header {display:flex;flex-direction:column;align-items:center;gap:17px;text-align:center;border-left:0;padding-left:0;padding-right:0}
+.resume-layout-centered-labels .resume-header .resume-photo {order:-1;width:82px;height:82px;border-radius:50%}
+.resume-layout-centered-labels .resume-identity {width:100%}
+.resume-layout-centered-labels .resume-header h1 {font-size:2.95em;max-width:none;letter-spacing:-.02em}
+.resume-layout-centered-labels .resume-contact {justify-content:center}
+.resume-layout-centered-labels .resume-main>.resume-section>h2 {display:flex;justify-content:center;align-items:center;gap:12px;border:0;padding:0;text-align:center;font-size:.79em;letter-spacing:.1em}
+.resume-layout-centered-labels .resume-main>.resume-section>h2:before,.resume-layout-centered-labels .resume-main>.resume-section>h2:after {content:'';height:1px;min-width:10px;flex:1;background:#d7dee3;border-radius:0}
+.resume-layout-centered-labels .resume-main .resume-section-number {width:auto}
+.resume-layout-centered-labels.resume-header-band .resume-header {padding-left:64px;padding-right:64px}
+
+/* Panels: content sections have inset bodies beneath full-width title bars. */
+.resume-layout-section-panels .resume-main>.resume-section {display:block;background:#f3f5f7;padding:15px 17px 17px;border:0;margin-bottom:22px}
+.resume-layout-section-panels .resume-main>.resume-section>h2 {display:flex;padding:10px 17px;margin:-15px -17px 14px;border:0;background:var(--resume-accent);color:var(--resume-accent-text);font-size:.76em;letter-spacing:.09em}
+.resume-layout-section-panels .resume-main>.resume-section>h2:before {display:none}
+.resume-layout-section-panels .resume-main .resume-tags {display:flex;flex-wrap:wrap;gap:7px 9px}
+.resume-layout-section-panels .resume-main .resume-tags>span {background:#fff;border:1px solid #dce2e7;padding:5px 9px}
+.resume-layout-section-panels .resume-main .resume-entry:last-child {margin-bottom:0}
+
+/* Chronicle: dated entries have a fixed date gutter before their content. */
+.resume-layout-date-column .resume-main .resume-entry-dated {display:grid;grid-template-columns:minmax(0,104px) minmax(0,1fr);gap:0 18px;padding-left:0;border-left:0;margin-left:0}
+.resume-layout-date-column .resume-main .resume-entry-dated:before {display:none}
+.resume-date-gutter {display:block;max-width:none;text-align:left;font-size:.76em;line-height:1.5;padding:2px 12px 0 0;border-right:1px solid #d7dee3;align-self:stretch;font-style:normal}
+.resume-entry-content {min-width:0}
+.resume-layout-date-column .resume-main .resume-entry-top {display:block}
+.resume-layout-date-column .resume-aside .resume-entry-dated {display:block}
+.resume-layout-date-column .resume-aside .resume-date-gutter {border:0;padding:0;margin:0 0 4px}
+.resume-layout-date-column.resume-cols-2 .resume-main .resume-entry-dated {grid-template-columns:minmax(0,86px) minmax(0,1fr);gap:0 14px}
+
+/* Outline: an inset boxed masthead anchors a quiet, open document body. */
+.resume-layout-bordered-header .resume-header {margin:0 0 31px;padding:23px 24px;border:1px solid var(--resume-accent);border-top-width:4px;background:#fff;gap:20px;align-items:center;text-align:left}
+.resume-layout-bordered-header .resume-header h1 {font-size:2.65em;letter-spacing:-.035em;color:#18232e}
+.resume-layout-bordered-header .resume-headline {font-size:.94em;letter-spacing:0;text-transform:none;color:var(--resume-ink-accent)}
+.resume-layout-bordered-header .resume-contact {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 14px;font-size:.74em;color:#52606c;justify-content:start}
+.resume-layout-bordered-header .resume-photo {border-radius:50%;width:76px;height:76px;border:0}
+.resume-layout-bordered-header .resume-header:after {display:none}
+.resume-layout-bordered-header.resume-treatment-rail .resume-header {padding:20px 18px}
+.resume-layout-bordered-header.resume-treatment-rail .resume-header h1 {font-size:2.35em}
+
+/* A chosen family applies to every text node, including artistic mastheads. */
+.resume-page.resume-font-custom {font-family:var(--resume-font-family)}
+.resume-font-custom :is(h1,h2,h3,.resume-headline,.resume-contact,.resume-section-number) {font-family:var(--resume-font-family)!important}
+
 .resume-compact {pointer-events:none;user-select:none}
 .resume-compact .resume-contact a {pointer-events:none}
 @media print {

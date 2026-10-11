@@ -12,6 +12,14 @@ type Locale = keyof typeof dictionaries;
 const languageNames = { es: 'Español', en: 'English', it: 'Italiano', pt: 'Português' };
 const cvTypes = ['harvard', 'chronological', 'functional', 'combination', 'academic', 'european', 'technical', 'creative'] as const;
 type CvType = typeof cvTypes[number];
+const resumeFonts = [
+  { id: 'inter', label: 'Inter', family: 'Inter', pdfFamily: /Inter/, wordName: 'Inter' },
+  { id: 'lato', label: 'Lato', family: 'Lato', pdfFamily: /Lato/, wordName: 'Lato' },
+  { id: 'montserrat', label: 'Montserrat', family: 'Montserrat', pdfFamily: /Montserrat/, wordName: 'Montserrat' },
+  { id: 'source-sans', label: 'Source Sans 3', family: 'Source Sans 3', pdfFamily: /SourceSans3/, wordName: 'Source Sans 3' },
+  { id: 'source-serif', label: 'Source Serif 4', family: 'Source Serif 4', pdfFamily: /SourceSerif4/, wordName: 'Source Serif 4' },
+  { id: 'merriweather', label: 'Merriweather', family: 'Merriweather', pdfFamily: /Merriweather/, wordName: 'Merriweather' },
+] as const;
 const fullName = 'María Ñúñez Çavalli';
 const description = 'Diseño accesible, comunicação clara y investigación de usuarios.';
 
@@ -35,7 +43,8 @@ async function chooseTypeAndDesign(page: Page, locale: Locale = 'es', cvType: Cv
   await page.locator(`.cv-type-card[data-cv-type="${cvType}"]`).click();
   await page.getByRole('button', { name: copy.cvTypeAction, exact: true }).click();
   await expect(page).toHaveURL(/\/templates\?step=design$/);
-  await expect(page.locator('.template-card')).toHaveCount(3);
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText(copy.templateCount.replace('{count}', '50'));
   const card = oneColumn ? page.locator('.template-card').filter({ hasText: copy.oneColumn }).first() : page.locator('.template-card').first();
   const chosenName = await card.locator('.template-info h2').innerText();
   await card.locator('.template-preview-button').click();
@@ -107,6 +116,16 @@ async function getDownload(page: Page, label: string, fileName: string, testInfo
   return output;
 }
 
+async function loadDesignCollection(page: Page, expectedCount: number) {
+  while (await page.locator('.template-card').count() < expectedCount) {
+    const previousCount = await page.locator('.template-card').count();
+    await page.locator('#design-load-more').click();
+    await expect(page.locator('.template-card')).toHaveCount(Math.min(previousCount + 12, expectedCount));
+  }
+  await expect(page.locator('.template-card')).toHaveCount(expectedCount);
+  await expect(page.locator('#design-load-more')).toHaveCount(0);
+}
+
 for (const locale of ['es', 'en', 'it', 'pt'] as const) {
   test(`complete questionnaire and editable Word in ${locale}`, async ({ page }, testInfo) => {
     const copy = dictionaries[locale];
@@ -117,7 +136,7 @@ for (const locale of ['es', 'en', 'it', 'pt'] as const) {
     await expect(page.locator('.preview-viewport article')).toHaveAttribute('lang', locale);
     await expect(page.getByRole('heading', { name: copy.reviewTitle, exact: true })).toBeVisible();
     await expect(page.locator('#review-template option:checked')).toHaveText(chosenName);
-    await expect(page.locator('#review-template option')).toHaveCount(3);
+    await expect(page.locator('#review-template option')).toHaveCount(50);
     if (locale === 'es') await page.screenshot({ path: '/tmp/cvonline-review.png', fullPage: true });
     const downloaded = await getDownload(page, copy.downloadWord, `cv-${locale}.docx`, testInfo);
     const docx = unzipSync(await readFile(downloaded));
@@ -280,19 +299,41 @@ test('answers stay in memory across steps, never leave the browser and disappear
   await expect(field(page, es.name)).toHaveValue('');
 });
 
-test('all 24 designs, type filters and public information are reachable', async ({ page }) => {
+test('all 400 unique designs, type filters and public information are reachable', async ({ page }) => {
+  test.setTimeout(100_000);
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu experiencia');
   await page.screenshot({ path: '/tmp/cvonline-final-desktop.png', fullPage: true });
   await page.getByRole('link', { name: es.navTemplates, exact: true }).click();
-  await expect(page.locator('.template-card')).toHaveCount(24);
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText('400 diseños');
+  const ids = new Set<string>();
+  const names = new Set<string>();
   for (const cvType of cvTypes) {
     await page.locator(`[data-cv-filter="${cvType}"]`).click();
-    await expect(page.locator('.template-card')).toHaveCount(3);
-    await expect(page.locator('.template-count')).toHaveText('3 diseños');
+    await expect(page.locator('.template-card')).toHaveCount(12);
+    await expect(page.locator('.template-count')).toHaveText('50 diseños');
+    await loadDesignCollection(page, 50);
+    const designs = await page.locator('.template-card').evaluateAll(cards => cards.map(card => ({
+      id: card.getAttribute('data-template-id')!,
+      name: card.querySelector('.template-info h2')!.textContent!,
+      type: card.getAttribute('data-template-cv-type'),
+    })));
+    for (const design of designs) {
+      expect(design.type).toBe(cvType);
+      expect(ids.has(design.id), `Repeated design ID ${design.id}`).toBe(false);
+      expect(names.has(design.name), `Repeated design name ${design.name}`).toBe(false);
+      ids.add(design.id);
+      names.add(design.name);
+    }
   }
+  expect(ids.size).toBe(400);
+  expect(names.size).toBe(400);
+  // Saved links to the original designs remain usable.
+  for (const id of ['folio', 'prism', 'muse', 'signal']) expect(ids.has(id)).toBe(true);
   await page.locator('[data-cv-filter="all"]').click();
-  await expect(page.locator('.resume-page')).toHaveCount(24);
+  await expect(page.locator('.resume-page')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText('400 diseños');
   await expect(page.locator('.catalog-note')).toHaveText(es.templatesSample);
   await page.getByRole('link', { name: es.navHow, exact: true }).click();
   await expect(page.locator('.how-card')).toHaveCount(3);
@@ -332,15 +373,17 @@ test('mobile 390px supports type selection, the full flow and every template wit
   await finish(page);
   await noOverflow();
   const options = await page.locator('#review-template option').evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value));
-  expect(options).toHaveLength(3);
+  expect(options).toHaveLength(50);
   for (const value of options) {
     await page.locator('#review-template').selectOption(value);
     await expect(page.locator('.preview-viewport article')).toContainText(fullName);
     await noOverflow();
   }
   await page.screenshot({ path: '/tmp/cvonline-review-mobile.png', fullPage: true });
+  // A full document navigation clears the in-memory editing session.
   await page.goto('/templates');
-  await expect(page.locator('.template-card')).toHaveCount(24);
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText('400 diseños');
   await noOverflow();
 });
 
@@ -414,7 +457,8 @@ test('partial custom sections show missing fields and preserve content until com
   await expect(page.locator('.entry-card')).toHaveCount(2);
 });
 
-test('each CV type explains its purpose and exposes three exclusive professional designs', async ({ page }) => {
+test('each CV type explains its purpose and offers fifty exclusive professional designs', async ({ page }) => {
+  test.setTimeout(100_000);
   const names = new Set<string>();
   for (const cvType of cvTypes) {
     await chooseLanguage(page);
@@ -423,14 +467,186 @@ test('each CV type explains its purpose and exposes three exclusive professional
     await card.click();
     await page.getByRole('button', { name: es.cvTypeAction, exact: true }).click();
     await expect(page).toHaveURL(/\/templates\?step=design$/);
-    await expect(page.locator('.template-card')).toHaveCount(3);
+    await expect(page.locator('.template-card')).toHaveCount(12);
+    await expect(page.locator('.template-count')).toHaveText('50 diseños');
+    await loadDesignCollection(page, 50);
     for (const name of await page.locator('.template-info h2').allTextContents()) {
       expect(names.has(name)).toBe(false);
       names.add(name);
     }
     await expect(page.locator('.catalog-note')).toHaveText(es.templatesSample);
   }
-  expect(names.size).toBe(24);
+  expect(names.size).toBe(400);
+  await page.locator('.template-card').last().locator('.template-preview-button').click();
+  await expect(page).toHaveURL(/\/profile$/);
+});
+
+test('catalog search finds accented type labels and resets paging when filters or queries change', async ({ page }) => {
+  await page.goto('/templates');
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveAttribute('data-total-designs', '400');
+  await page.locator('#design-load-more').click();
+  await expect(page.locator('.template-card')).toHaveCount(24);
+  await page.locator('#design-search').fill('CRONOLOGICO');
+  await expect(page.locator('.template-count')).toHaveText('50 diseños');
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  const foundTypes = await page.locator('.template-card').evaluateAll(cards => cards.map(card => card.getAttribute('data-template-cv-type')));
+  expect(new Set(foundTypes)).toEqual(new Set(['chronological']));
+  await page.locator('#design-load-more').click();
+  await expect(page.locator('.template-card')).toHaveCount(24);
+  await page.locator('#design-search').fill('not-an-existing-cv-design');
+  await expect(page.locator('.template-card')).toHaveCount(0);
+  await expect(page.locator('.template-count')).toHaveText('0 diseños');
+  await expect(page.locator('.catalog-empty')).toBeVisible();
+  await page.getByRole('button', { name: es.designClearSearch, exact: true }).click();
+  await expect(page.locator('#design-search')).toHaveValue('');
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText('400 diseños');
+  await page.locator('#design-load-more').click();
+  await expect(page.locator('.template-card')).toHaveCount(24);
+  await page.locator('[data-cv-filter="harvard"]').click();
+  await expect(page.locator('.template-card')).toHaveCount(12);
+  await expect(page.locator('.template-count')).toHaveText('50 diseños');
+  await page.locator('#design-search').fill('cambridge');
+  await expect(page.locator('.template-card')).toHaveCount(10);
+  for (const name of await page.locator('.template-info h2').allTextContents()) expect(name.toLowerCase()).toContain('cambridge');
+});
+
+test('six selectable fonts reach every preview heading, embed in PDF and remain editable in Word', async ({ page }, testInfo) => {
+  test.setTimeout(180_000);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await start(page);
+  await personal(page);
+  await page.locator('#photo-input').setInputFiles(await photoFixture(page, 'image/png'));
+  await expect(page.locator('.photo-uploader img')).toBeVisible();
+  await finish(page);
+  const fontSelector = page.locator('#review-font-family');
+  await expect(fontSelector).toHaveValue('auto');
+  await expect(fontSelector.locator('option')).toHaveCount(7);
+  expect(await fontSelector.locator('option').evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value))).toEqual(['auto', ...resumeFonts.map(font => font.id)]);
+  await expect(page.locator('#font-family-notice')).toHaveText(es.fontNoticeWord);
+  for (const font of resumeFonts) {
+    await fontSelector.selectOption(font.id);
+    await page.evaluate(() => document.fonts.ready);
+    const previewFamilies = await page.locator('.preview-viewport article').evaluate(article => [
+      article,
+      article.querySelector('h1')!,
+      article.querySelector('h2')!,
+      article.querySelector('.resume-body-text')!,
+    ].map(element => getComputedStyle(element).fontFamily));
+    for (const family of previewFamilies) expect(family).toContain(font.family);
+    const pdf = await getDownload(page, es.downloadPdf, `font-${font.id}.pdf`, testInfo);
+    const pdfText = execFileSync('pdftotext', [pdf, '-'], { encoding: 'utf8' });
+    expect(pdfText).toContain(fullName);
+    expect(pdfText).toContain('comunicação');
+    expect(pdfText).toContain('maria.private@example.com');
+    const pdfFonts = execFileSync('pdffonts', [pdf], { encoding: 'utf8' });
+    const rows = pdfFonts.trim().split('\n').slice(2);
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    for (const row of rows) {
+      expect(row).toMatch(font.pdfFamily);
+      // Embedded/subset/Unicode columns: the font is embedded and searchable.
+      expect(row).toMatch(/\byes\s+(?:yes|no)\s+yes\s+\d+\s+\d+$/);
+    }
+    expect(execFileSync('pdfimages', ['-list', pdf], { encoding: 'utf8' })).toMatch(/\bimage\b/);
+    const files = unzipSync(await readFile(await getDownload(page, es.downloadWord, `font-${font.id}.docx`, testInfo)));
+    const documentXml = strFromU8(files['word/document.xml']);
+    const stylesXml = strFromU8(files['word/styles.xml']);
+    expect(documentXml).toContain(fullName);
+    expect(documentXml).toContain(description);
+    expect(documentXml).toContain('<w:drawing>');
+    expect(`${stylesXml}${documentXml}`).toContain(`w:ascii="${font.wordName}"`);
+    expect(`${stylesXml}${documentXml}`).toContain(`w:hAnsi="${font.wordName}"`);
+  }
+  await fontSelector.selectOption('inter');
+  await page.locator('#review-template').selectOption('prism--contact-strip');
+  await expect(fontSelector).toHaveValue('inter');
+  await expect(page.locator('.preview-viewport article')).toContainText(fullName);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(fontSelector).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
+  expect(errors).toEqual([]);
+});
+
+test('multipage Lato rail PDF retains every long job and project title at page boundaries', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  const paragraph = 'Diseño accesible, comunicação clara y investigación de usuarios. Coordinación de equipos y proyectos profesionales en ámbitos internacionales.';
+  const jobs = Array.from({ length: 7 }, (_, index) => ({
+    role: `Responsable ${index + 1} de investigación y comunicación estratégica Ñ Ç`,
+    company: `Organización ${index + 1} São Paulo`,
+    achievement: `Logro ${index + 1} de investigación internacional\nResultados medibles ${index + 1} con equipos y accesibilidad`,
+  }));
+  const projects = Array.from({ length: 4 }, (_, index) => `Proyecto ${index + 1} de investigación estratégica Ñ Ç`);
+  await start(page);
+  await personal(page);
+  await field(page, es.email).fill('alex@example.com');
+  await field(page, es.phone).fill('+34 600 123 456');
+  await field(page, es.website).fill('https://alexmorgan.example');
+  await page.locator('#photo-input').setInputFiles(await photoFixture(page, 'image/png'));
+  await expect(page.locator('.photo-uploader img')).toBeVisible();
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  for (const [index, job] of jobs.entries()) {
+    await page.getByRole('button', { name: es.addExperience, exact: true }).click();
+    const entry = page.locator('.entry-card').nth(index);
+    await entry.getByLabel(es.role, { exact: true }).fill(job.role);
+    await entry.getByLabel(es.company, { exact: true }).fill(job.company);
+    await entry.getByLabel(es.location, { exact: false }).fill('São Paulo');
+    await entry.getByLabel(es.startDate, { exact: true }).fill(`${2015 + index}-03`);
+    await entry.getByLabel(es.endDate, { exact: true }).fill(`${2016 + index}-04`);
+    await entry.getByLabel(es.responsibilities, { exact: true }).fill(paragraph.repeat(8));
+    await entry.getByLabel(es.achievements, { exact: true }).fill(job.achievement);
+  }
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByRole('button', { name: es.addEducation, exact: true }).click();
+  await field(page, es.degree).fill('Grado en Diseño');
+  await field(page, es.institution).fill('Universidad de Diseño');
+  await field(page, es.location).fill('Madrid');
+  await field(page, es.startDate).fill('2017-09');
+  await field(page, es.endDate).fill('2021-06');
+  for (const project of projects) {
+    await page.getByRole('button', { name: es.addProject, exact: true }).click();
+    const entry = page.locator('.entry-card').last();
+    await entry.getByLabel(es.projectName, { exact: true }).fill(project);
+    await entry.getByLabel(es.projectDescription, { exact: true }).fill(paragraph.repeat(6));
+  }
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await page.getByPlaceholder(es.skillsPlaceholder).fill('Diseño de producto, Investigación, Figma, Prototipado');
+  await page.getByRole('button', { name: es.addLanguage, exact: true }).click();
+  await page.getByRole('textbox', { name: es.languageName, exact: true }).fill('Inglés');
+  await page.getByRole('combobox', { name: es.languageLevel, exact: true }).selectOption('C1');
+  await page.getByRole('button', { name: es.addCertification, exact: true }).click();
+  await field(page, es.certificationName).fill('Certificación avanzada Ñ');
+  await field(page, es.issuer).fill('Associação de Pesquisa');
+  await field(page, es.certificationDate).fill('2024-01');
+  await page.getByPlaceholder(es.interestsPlaceholder).fill('Investigación, Ciência, Design');
+  await page.getByRole('button', { name: es.next, exact: true }).click();
+  await field(page, es.summary).fill(paragraph.repeat(12));
+  await page.getByRole('button', { name: es.addCustom, exact: true }).click();
+  await field(page, es.customTitle).fill('Publicaciones / Pubblicazioni');
+  await field(page, es.customBody).fill(paragraph.repeat(10));
+  await page.getByRole('button', { name: es.finish, exact: true }).click();
+  await expect(page).toHaveURL(/\/review$/);
+  await page.locator('#review-template').selectOption('prism--contact-strip');
+  await page.locator('#review-font-family').selectOption('lato');
+  await page.locator('#paper-size').selectOption('LETTER');
+  await page.locator('#font-size').focus();
+  await page.locator('#font-size').press('End');
+  await expect(page.locator('#font-size')).toHaveValue('13');
+  const pdf = await getDownload(page, es.downloadPdf, 'lato-rail-page-boundaries.pdf', testInfo);
+  const text = execFileSync('pdftotext', ['-layout', pdf, '-'], { encoding: 'utf8' });
+  const searchable = text.normalize('NFC').replace(/\s+/gu, '');
+  for (const title of [...jobs.flatMap(job => [job.role, job.company]), ...projects]) {
+    expect(searchable, `Missing full title at a PDF page boundary: ${title}`).toContain(title.replace(/\s+/gu, ''));
+  }
+  expect(searchable).toContain(fullName.replace(/\s+/gu, ''));
+  // Designs may uppercase and track section headings in the exported PDF.
+  expect(searchable.toLocaleUpperCase('es')).toContain('PUBLICACIONES/PUBBLICAZIONI');
+  // Flow extraction keeps wrapped sidebar text together instead of interleaving columns.
+  const flowingText = execFileSync('pdftotext', [pdf, '-'], { encoding: 'utf8' }).replace(/\s+/gu, '');
+  expect(flowingText).toContain('CertificaciónavanzadaÑ');
+  expect(Number(/Pages:\s+(\d+)/.exec(execFileSync('pdfinfo', [pdf], { encoding: 'utf8' }))?.[1])).toBeGreaterThan(1);
+  expect(execFileSync('pdffonts', [pdf], { encoding: 'utf8' })).toMatch(/Lato-Regular/);
 });
 
 test('type selection is translated and remains usable at 390px in all four languages', async ({ page }) => {
@@ -527,6 +743,7 @@ test('changing all eight types keeps answers and changes section order in previe
   await field(page, es.customBody).fill('Artículo publicado sobre accesibilidad.');
   await page.getByRole('button', { name: es.finish, exact: true }).click();
   await expect(page).toHaveURL(/\/review$/);
+  await page.locator('#review-font-family').selectOption('inter');
   const markers = {
     summary: 'PERFILVERIFICADO', experience: 'EXPERIENCIAVERIFICADA', education: 'FORMACIONVERIFICADA',
     projects: 'PROYECTOVERIFICADO', skills: 'COMPETENCIAVERIFICADA', custom: 'PUBLICACIONVERIFICADA',
@@ -545,13 +762,14 @@ test('changing all eight types keeps answers and changes section order in previe
   for (const cvType of cvTypes) {
     await page.locator('#review-cv-type').selectOption(cvType);
     await expect(page).toHaveURL(/\/templates\?step=design$/);
-    await expect(page.locator('.template-card')).toHaveCount(3);
+    await expect(page.locator('.template-card')).toHaveCount(12);
     await expect(page.locator('.catalog-note')).toHaveText(es.templatesYourData);
     const oneColumn = page.locator('.template-card').filter({ hasText: es.oneColumn }).first();
     await oneColumn.locator('.template-preview-button').click();
     await expect(page).toHaveURL(/\/review$/);
     await expect(page.locator('#review-cv-type')).toHaveValue(cvType);
-    await expect(page.locator('#review-template option')).toHaveCount(3);
+    await expect(page.locator('#review-template option')).toHaveCount(50);
+    await expect(page.locator('#review-font-family')).toHaveValue('inter');
     const resume = page.locator('.preview-viewport article');
     await expect(resume).toContainText(fullName);
     await expect(resume).toContainText('maria.private@example.com');

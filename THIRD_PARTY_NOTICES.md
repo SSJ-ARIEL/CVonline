@@ -2,7 +2,9 @@
 
 Los derechos reservados del proyecto se aplican únicamente a su código, diseños y textos originales. Las dependencias y modelos conservan sus licencias y titulares respectivos. Este documento no convierte los componentes de terceros en propiedad exclusiva de CVonline.
 
-Los 17 diseños de currículum se implementaron como composiciones originales. No se incorporó código, imágenes ni plantillas de Framer, Powder, Reactive Resume, shadcn o Magic UI. Las referencias visuales del diseño no se redistribuyen como recursos del proyecto.
+Los 400 diseños de currículum se implementaron como composiciones originales. No se incorporó código, imágenes ni plantillas de Framer, Powder, Reactive Resume, shadcn o Magic UI. Las referencias visuales del diseño no se redistribuyen como recursos del proyecto.
+
+Las seis familias tipográficas adicionales conservan sus licencias OFL en `public/fonts`; sus fuentes se documentan en [docs/FONTS.md](docs/FONTS.md).
 
 ## Componentes principales
 

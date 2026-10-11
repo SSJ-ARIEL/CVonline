@@ -763,6 +763,33 @@ select.language-switch { display: block; padding: 8px 4px; min-height: 44px; wid
 .review-type-note .text-link { color: #a6c2c9; font-size: 10px; gap: 7px; }
 .review-type-note .type-chip { font-size: 10px; }
 
+/* Search and progressive previews keep the large catalog easy to explore. */
+.catalog-search { display: flex; flex-direction: column; gap: 10px; max-width: 580px; margin: 0 0 21px; }
+.catalog-search > label { color: #b2c3ce; font-size: 11px; font-weight: 500; }
+.catalog-search-input { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 15px; border: 1px solid #354b5a; border-radius: 6px; background: #111c25; }
+.catalog-search-input:focus-within { border-color: var(--cyan); box-shadow: 0 0 0 3px #71e9e212; }
+.catalog-search-input > svg { flex-shrink: 0; color: #7c9cae; }
+.catalog-search-input > input { width: 100%; min-width: 0; min-height: 46px; border: 0; outline: 0; background: transparent; color: #e5edf3; font: inherit; font-size: 13px; }
+.catalog-search-input > input::placeholder { color: #8198a9; }
+.catalog-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
+.catalog-pagination { display: flex; justify-content: center; align-items: center; gap: 23px; margin: 30px 0 23px; padding-top: 24px; border-top: 1px solid var(--line); }
+.design-showing { margin: 0; color: #9db2c1; font-size: 12px; line-height: 1.6; }
+.catalog-pagination > .button { min-height: 46px; border-color: #496472; }
+.catalog-empty { padding: 45px 24px; border: 1px dashed #39515e; border-radius: 8px; background: #121d25; text-align: center; }
+.catalog-empty > p { margin: 0 0 19px; color: #b7c9d5; font-size: 13px; line-height: 1.8; }
+.font-family-control > .field-hint { margin: 12px 0 0; color: #93aabb; font-size: 11px; line-height: 1.7; }
+.font-family-control > select { max-width: 100%; text-overflow: ellipsis; }
+
+@media (max-width: 600px) {
+  .catalog-search { max-width: 100%; margin-bottom: 19px; }
+  .catalog-search-input { padding-inline: 12px; gap: 9px; }
+  .catalog-search-input > input { font-size: 12px; }
+  .catalog-pagination { flex-direction: column; gap: 15px; margin-top: 25px; }
+  .catalog-pagination > .button { width: 100%; }
+  .catalog-empty { padding: 32px 17px; }
+  .review-controls > .control-section:has(.review-type-note), .review-controls > .font-family-control { grid-column: 1 / -1; }
+}
+
 @media (max-width: 1000px) {
   .cv-type-card { gap: 14px 16px; padding: 22px; }
   .cv-type-icon { top: 22px; left: 22px; }

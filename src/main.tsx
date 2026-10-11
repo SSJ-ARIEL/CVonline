@@ -8,6 +8,7 @@ import '@fontsource/dm-sans/700.css';
 import '@fontsource/dm-serif-display/400.css';
 import '@fontsource/dm-serif-display/400-italic.css';
 import './styles.css';
+import './fonts.css';
 import App from './App';
 import { ResumeProvider } from './state';
 

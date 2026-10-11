@@ -1,0 +1,247 @@
+{
+  "license": "SIL Open Font License 1.1",
+  "fontToolsVersion": "4.61.1",
+  "brotliVersion": "1.2.0",
+  "fonts": [
+    {
+      "id": "inter",
+      "family": "Inter",
+      "repository": "https://github.com/google/fonts",
+      "commit": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
+      "licenseFile": "inter-OFL.txt",
+      "licenseSha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+          "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+          "transformation": {
+            "operation": "instantiateVariableFont",
+            "axes": {
+              "opsz": 14,
+              "wght": 400
+            },
+            "updateFontNames": true
+          },
+          "ttfFile": "inter-regular.ttf",
+          "ttfSha256": "8b4c2b28088c962e2bdc4d8d5889d2b0722aa6b30d4aad185dea5d6d48e42364",
+          "woff2File": "inter-regular.woff2",
+          "woff2Sha256": "8f6144db4fdf23629225ef6318ae4eb481ecae7b064cacc870afc1fc5b9a9674",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+          "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+          "transformation": {
+            "operation": "instantiateVariableFont",
+            "axes": {
+              "opsz": 14,
+              "wght": 700
+            },
+            "updateFontNames": true
+          },
+          "ttfFile": "inter-bold.ttf",
+          "ttfSha256": "a3dbea17788c02cbea0ac715e3198f3f6d4c8127993927fdc51bc4b1d179f5b2",
+          "woff2File": "inter-bold.woff2",
+          "woff2Sha256": "cc8c61fd9262185d04b4f911b23293cd6ef0c309b141a75b3f9cb46a1ad236c2",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/inter/OFL.txt"
+    },
+    {
+      "id": "lato",
+      "family": "Lato",
+      "repository": "https://github.com/google/fonts",
+      "commit": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
+      "licenseFile": "lato-OFL.txt",
+      "licenseSha256": "74ba064d03f1f1c4a952da936c3eb71866c34404916734de3cae73b34357e59e",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/lato/Lato-Regular.ttf",
+          "sourceSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "lato-regular.ttf",
+          "ttfSha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+          "woff2File": "lato-regular.woff2",
+          "woff2Sha256": "e33c4a144aba5204365799b4479d96cc2f64469d8c9cb0980f765f5748454830",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/lato/Lato-Bold.ttf",
+          "sourceSha256": "8a0aace75d33794eece4b28187bfc1df0bbd2888b5d8a56e01788c8d65d16be1",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "lato-bold.ttf",
+          "ttfSha256": "8a0aace75d33794eece4b28187bfc1df0bbd2888b5d8a56e01788c8d65d16be1",
+          "woff2File": "lato-bold.woff2",
+          "woff2Sha256": "b84849c512cfdd3d104c90ff36d086aa17eec524ffbb2c547d62d34dc1e7e2fd",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/lato/OFL.txt"
+    },
+    {
+      "id": "montserrat",
+      "family": "Montserrat",
+      "repository": "https://github.com/google/fonts",
+      "commit": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
+      "licenseFile": "montserrat-OFL.txt",
+      "licenseSha256": "8b7141c03fa4f8d44e6345d5d4931709290f0f67875e452e95ac1fd3a027802e",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/montserrat/Montserrat%5Bwght%5D.ttf",
+          "sourceSha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7",
+          "transformation": {
+            "operation": "instantiateVariableFont",
+            "axes": {
+              "wght": 400
+            },
+            "updateFontNames": true
+          },
+          "ttfFile": "montserrat-regular.ttf",
+          "ttfSha256": "b0dfb0b690ce4728a63376fb6c387fdef5ea7a9b5af03949fb4eeb602b3e23b8",
+          "woff2File": "montserrat-regular.woff2",
+          "woff2Sha256": "ff2d140c10d48de72a2c1bd9005b4c83bca234a1b8cf7d07dd9701b4bb03251c",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/montserrat/Montserrat%5Bwght%5D.ttf",
+          "sourceSha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7",
+          "transformation": {
+            "operation": "instantiateVariableFont",
+            "axes": {
+              "wght": 700
+            },
+            "updateFontNames": true
+          },
+          "ttfFile": "montserrat-bold.ttf",
+          "ttfSha256": "b5cd7141d3891a1844e71b0f5bd3a1a1528e928147240729428291f6949c6bfa",
+          "woff2File": "montserrat-bold.woff2",
+          "woff2Sha256": "65a212dd6c3a804e6564248f8f440ecf15fbca25d477fb654ca5603eb195316f",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/montserrat/OFL.txt"
+    },
+    {
+      "id": "source-sans",
+      "family": "Source Sans 3",
+      "repository": "https://github.com/adobe-fonts/source-sans",
+      "commit": "ed1808970eb3c7301c9a523bee26473ba0bb62fa",
+      "licenseFile": "source-sans-OFL.txt",
+      "licenseSha256": "89ad2c4f66dd29127527493e729c31e731f111cf10faf5774c3db9275ed0c22c",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-sans/ed1808970eb3c7301c9a523bee26473ba0bb62fa/TTF/SourceSans3-Regular.ttf",
+          "sourceSha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "source-sans-regular.ttf",
+          "ttfSha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f",
+          "woff2File": "source-sans-regular.woff2",
+          "woff2Sha256": "6644aefadfce2b42a9eb59d4eb3ae6e4668a24943e9d68f9a5874bbc5188d774",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-sans/ed1808970eb3c7301c9a523bee26473ba0bb62fa/TTF/SourceSans3-Bold.ttf",
+          "sourceSha256": "9214b9d95e4231c609802815c2646c98174e2102d0d37f88978a7f8e71006e6a",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "source-sans-bold.ttf",
+          "ttfSha256": "9214b9d95e4231c609802815c2646c98174e2102d0d37f88978a7f8e71006e6a",
+          "woff2File": "source-sans-bold.woff2",
+          "woff2Sha256": "fea38a4ffe53dc62f81d554339409f64954d9ac3ea4da7dcc34aff854460b5ab",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/adobe-fonts/source-sans/ed1808970eb3c7301c9a523bee26473ba0bb62fa/LICENSE.md"
+    },
+    {
+      "id": "source-serif",
+      "family": "Source Serif 4",
+      "repository": "https://github.com/adobe-fonts/source-serif",
+      "commit": "2823e993c53fca27c5c8749f529b56a5a7c77b6b",
+      "licenseFile": "source-serif-OFL.txt",
+      "licenseSha256": "75784a295293a8992f5a8d99210566e0064a012e6dab6731305e3787f15896c7",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-serif/2823e993c53fca27c5c8749f529b56a5a7c77b6b/TTF/SourceSerif4-Regular.ttf",
+          "sourceSha256": "e5a4ee6a3d87bb9024796be390c6771e2a0eb1883dae25effaf57ca01668e24b",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "source-serif-regular.ttf",
+          "ttfSha256": "e5a4ee6a3d87bb9024796be390c6771e2a0eb1883dae25effaf57ca01668e24b",
+          "woff2File": "source-serif-regular.woff2",
+          "woff2Sha256": "520d28e02429a1c2b9e7f2e2820ec10eabe45718b7978247364c19fb8a5476f5",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-serif/2823e993c53fca27c5c8749f529b56a5a7c77b6b/TTF/SourceSerif4-Bold.ttf",
+          "sourceSha256": "7cf4f4e1ad74f45058d5bc61716b82560442fbdcd9d3654d2dea96bf6c683d86",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "source-serif-bold.ttf",
+          "ttfSha256": "7cf4f4e1ad74f45058d5bc61716b82560442fbdcd9d3654d2dea96bf6c683d86",
+          "woff2File": "source-serif-bold.woff2",
+          "woff2Sha256": "566572a9ca26e8057f9b42c763daae56d9b4df3016eab37ceb860d7f15d939e1",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/adobe-fonts/source-serif/2823e993c53fca27c5c8749f529b56a5a7c77b6b/LICENSE.md"
+    },
+    {
+      "id": "merriweather",
+      "family": "Merriweather",
+      "repository": "https://github.com/google/fonts",
+      "commit": "6392e4f212bab750be373234f29966cb268e1cfd",
+      "licenseFile": "merriweather-OFL.txt",
+      "licenseSha256": "a7ba785ad99b6eae0444ab89910e512d4af9865937fddbcb5c72c4f59f55d6ad",
+      "files": [
+        {
+          "weight": 400,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/6392e4f212bab750be373234f29966cb268e1cfd/ofl/merriweather/Merriweather-Regular.ttf",
+          "sourceSha256": "bc38fe756b3e259248183fc0b75ad81b02774f3ca68e5e544e925827b0186d40",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "merriweather-regular.ttf",
+          "ttfSha256": "bc38fe756b3e259248183fc0b75ad81b02774f3ca68e5e544e925827b0186d40",
+          "woff2File": "merriweather-regular.woff2",
+          "woff2Sha256": "95456813c4ecb388b57fb07e672e8e01e1be6656ff0dfde6cd7e02078288c449",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        },
+        {
+          "weight": 700,
+          "sourceUrl": "https://raw.githubusercontent.com/google/fonts/6392e4f212bab750be373234f29966cb268e1cfd/ofl/merriweather/Merriweather-Bold.ttf",
+          "sourceSha256": "55139769a87085bff777f68e3ecf92450c21a04c5ddd1e9e9528960ba4088c9f",
+          "transformation": {
+            "operation": "unchanged static TrueType source"
+          },
+          "ttfFile": "merriweather-bold.ttf",
+          "ttfSha256": "55139769a87085bff777f68e3ecf92450c21a04c5ddd1e9e9528960ba4088c9f",
+          "woff2File": "merriweather-bold.woff2",
+          "woff2Sha256": "0a5c7613f2e63b5d33fe168d5a0a76d1b67d358fb55482f9658b91e50fdf02a3",
+          "woff2Transformation": "lossless WOFF2 compression via fontTools TTFont.flavor"
+        }
+      ],
+      "licenseUrl": "https://raw.githubusercontent.com/google/fonts/6392e4f212bab750be373234f29966cb268e1cfd/ofl/merriweather/OFL.txt"
+    }
+  ]
+}

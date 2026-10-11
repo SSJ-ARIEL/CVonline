@@ -21,7 +21,7 @@ interface ResumeState {
 const Context = createContext<ResumeState | null>(null);
 const initialSettings = (locale: Locale): ResumeSettings => {
   const template=getTemplatesForType('chronological')[0];
-  return {locale,cvType:'chronological',templateId:template.id,accent:template.accent,paper:'A4',showPhoto:getCvType('chronological').photoRecommended,fontSize:10};
+  return {locale,cvType:'chronological',templateId:template.id,accent:template.accent,paper:'A4',showPhoto:getCvType('chronological').photoRecommended,fontSize:10,fontFamily:'auto'};
 };
 function initialLocale(): Locale {
   if (typeof window !== 'undefined') {

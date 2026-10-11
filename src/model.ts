@@ -2,6 +2,8 @@ export type Locale = 'es' | 'en' | 'it' | 'pt';
 export type Profile = 'experienced' | 'first-job' | 'career-change' | 'academic';
 export type CvType = 'harvard' | 'chronological' | 'functional' | 'combination' | 'academic' | 'european' | 'technical' | 'creative';
 export type TemplateTreatment = 'formal' | 'editorial' | 'frame' | 'rail' | 'banner' | 'timeline' | 'ledger' | 'portfolio';
+export type TemplateLayoutVariant = 'standard' | 'contact-strip' | 'split-masthead' | 'label-column' | 'inset-heading' | 'top-rule' | 'centered-labels' | 'section-panels' | 'date-column' | 'bordered-header';
+export type ResumeFontId = 'auto' | 'inter' | 'lato' | 'montserrat' | 'source-sans' | 'source-serif' | 'merriweather';
 export type PaperSize = 'A4' | 'LETTER';
 
 export interface Personal {
@@ -71,6 +73,9 @@ export interface TemplateDefinition {
   sectionStyle: 'line' | 'bar' | 'caps' | 'dot';
   cvTypes: CvType[];
   treatment: TemplateTreatment;
+  layoutVariant: TemplateLayoutVariant;
+  sidebarWidth?: 25 | 29 | 33;
+  pageInset?: 'standard' | 'narrow' | 'generous';
 }
 export interface ResumeSettings {
   locale: Locale;
@@ -80,6 +85,7 @@ export interface ResumeSettings {
   paper: PaperSize;
   showPhoto: boolean;
   fontSize: number;
+  fontFamily: ResumeFontId;
 }
 export const LOCALES: {code: Locale; name: string; short: string}[] = [
   {code:'es', name:'Español', short:'ES'}, {code:'en', name:'English', short:'EN'},

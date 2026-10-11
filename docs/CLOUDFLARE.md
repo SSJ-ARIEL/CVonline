@@ -1,6 +1,16 @@
 # Publicar CVonline en Cloudflare Pages
 
-Esta guía prepara un despliegue desde `SSJ-ARIEL/CVonline`, rama `main`. No configura ni publica automáticamente una cuenta externa.
+Esta guía describe cómo publicar desde `SSJ-ARIEL/CVonline`, rama `main`. Las credenciales se introducen únicamente mediante variables de entorno seguras.
+
+## Publicación desde Codex o una terminal
+
+Configura `CLOUDFLARE_API_TOKEN` como secreto con permiso **Account → Cloudflare Pages → Edit** para la cuenta correspondiente. `CLOUDFLARE_ACCOUNT_ID` es el identificador de cuenta de 32 caracteres; no es el token. Nunca pegues el token en el chat ni lo guardes en Git.
+
+```bash
+npm run deploy:cloudflare
+```
+
+El script usa Wrangler 4.149.0, reutiliza el proyecto `cvonline` o crea uno de Direct Upload, obtiene su dominio real, compila con ese origen y publica `dist` en la rama de producción `main`. Puedes cambiar el nombre con `CLOUDFLARE_PAGES_PROJECT`. El código permanece en GitHub. Con Direct Upload, las actualizaciones se publican ejecutando de nuevo este comando; no se conectan automáticamente a cada push. Cloudflare no permite convertir después ese proyecto a integración Git: si prefieres compilación automática, crea desde el inicio un proyecto conectado a Git siguiendo la sección siguiente. Los proyectos Git existentes también admiten despliegues manuales con Wrangler.
 
 ## 1. Conectar el repositorio
 
@@ -41,6 +51,8 @@ En el primer despliegue todavía puede no conocerse la dirección asignada. Pued
 
 ## 4. Dirección gratuita y dominio posterior
 
+El proyecto de esta cuenta se llama `cvonline`; Cloudflare le asignó **https://cvonline-zw0.pages.dev**. El script consulta el dominio de la cuenta antes de cada compilación para evitar publicar enlaces canónicos con una dirección supuesta.
+
 Cloudflare Pages asigna un subdominio bajo `pages.dev`. Escoge un nombre disponible en el panel; **no se ha reservado ni comprobado `cvonline.pages.dev`**. No confundas esta dirección gratuita con la propiedad de un dominio independiente.
 
 Cuando decidas adquirir un dominio, añádelo mediante la sección de dominios personalizados del proyecto y sigue las instrucciones DNS de Cloudflare. Configura `VITE_SITE_URL` con el origen nuevo y vuelve a desplegar. El registro y la renovación del dominio tienen un coste separado; revisa ambos antes de comprar. La migración del nombre no requiere mover el código fuera de GitHub.
@@ -67,7 +79,7 @@ Comprueba en escritorio y móvil:
 1. Portada, navegación y cambio de los cuatro idiomas.
 2. Elección de tipo después del idioma, diseños compatibles y regreso entre pantallas sin perder respuestas durante la sesión.
 3. Datos de contacto, formación, experiencia, proyectos y secciones adicionales.
-4. Foto opcional y selección de ocho tipos y visualización de sus 24 diseños.
+4. Foto opcional y selección de ocho tipos y visualización de sus 400 diseños (50 por tipo), búsqueda, carga progresiva y seis tipografías.
 5. PDF descargado con texto seleccionable y Word editable; apertura de archivos cortos y largos, caracteres acentuados, foto y saltos de página.
 6. Cada guía abierta por su URL, incluida una recarga directa.
 7. Descartar y reiniciar; confirmar que una recarga no recupera las respuestas.

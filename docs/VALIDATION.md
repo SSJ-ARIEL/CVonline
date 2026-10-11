@@ -1,31 +1,39 @@
 # Validación de CVonline
 
-La versión se comprobó en el entorno de desarrollo de Codex con Node.js 24, npm y Chromium. Estas comprobaciones describen el entorno actual; no acreditan todavía un despliegue público ni la ejecución de GitHub Actions.
+Las comprobaciones se realizaron con Node.js 24, npm, Chromium y Poppler. La compilación utiliza el origen real asignado por Cloudflare: https://cvonline-zw0.pages.dev.
 
 ## Resultado
 
-- Instalación repetible con `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`: correcta.
-- `npm run build`: correcto, con TypeScript, 52 páginas públicas prerenderizadas, avisos de licencias y comprobación del límite de 25 MiB por archivo de Cloudflare Pages.
+- Dependencias reutilizadas del entorno preparado con `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`; las dependencias y el archivo de bloqueo no cambiaron.
+- `npm run build`: correcto, con TypeScript, 52 páginas públicas prerenderizadas, avisos de 140 dependencias y comprobación del límite de 25 MiB por archivo de Cloudflare Pages.
 - `npm audit --omit=dev --audit-level=high`: cero vulnerabilidades conocidas reportadas.
-- Arranque de desarrollo: portada y selector de cuatro idiomas comprobados en Chromium.
-- `npm test` sobre la compilación de producción: **17 pruebas aprobadas, cero fallidas, cero omitidas, cero inestables**.
-- Revisión visual de los nuevos pasos: 48 combinaciones de idioma, tamaño de pantalla y selección de tipo, diseño o perfil sin desbordamiento horizontal.
-- Catálogo: 24 composiciones revisadas en el navegador y 96 casos extensos con cuatro idiomas, nombres largos, contenido personalizado y colores claros, sin recortes ni desbordamientos.
-- Exportaciones del catálogo: PDF y Word reales para los 24 diseños, más tres casos de varias páginas; texto completo, caracteres especiales y fotografía conservados.
-- Configuración de producción probada en un directorio temporal: lectura de `.env.local`, 52 URL del sitemap, alternativas de cuatro idiomas, exclusión del editor y generación condicional de `ads.txt`. Los datos ficticios de esta comprobación no se incluyen en el build publicado.
+- Suite de producción: **20 pruebas aprobadas, cero fallidas, cero omitidas, cero inestables**.
+- Catálogo: 400 diseños y nombres únicos, 50 por cada uno de los ocho tipos. Cinco composiciones base y diez variantes estructurales por tipo; cada colección presentó 50 firmas geométricas distintas sin contar colores ni nombres.
+- Vista previa: 400 renders normales y 80 casos extensos, con cuatro idiomas, seis fuentes, nombres largos, fotos y documentos de varias páginas; sin desbordamientos ni títulos ausentes.
+- Interfaz: 48 casos de tipo, catálogo y revisión en cuatro idiomas y anchos de 320, 390, 768 y 1440 px; 96 selecciones de fuente y cero errores o desbordamientos.
+- Exportaciones: 62 PDF y 62 Word, incluidos los ocho tipos, las seis fuentes, diez variantes y cuatro currículums extensos de 9–10 páginas. Se verificaron títulos, subtítulos, viñetas, textos y fotos.
+- Tipografías: 12 TTF estáticos y 12 WOFF2, pesos 400/700, permiso de incrustación, caracteres acentuados y símbolo del euro, equivalencia de contornos y hashes del manifiesto.
+- Configuración pública: 52 URL en el sitemap y enlaces canónicos con el dominio real; publicidad desactivada y sin `ads.txt`.
+- Galería HTML independiente: 18 capturas actuales de escritorio y móvil; todas las imágenes decodifican, funciona sin solicitudes HTTP y no desborda a 320 px.
 
 ## Cobertura del navegador
 
-Las pruebas cubren los recorridos en español, inglés, italiano y portugués; contacto y fechas inválidos; fotos PNG, JPEG y WebP procesadas localmente; ocho tipos de CV y sus 24 diseños; navegación móvil; recarga y reinicio; ausencia de almacenamiento persistente y envío de datos personales; y exportación real de PDF y DOCX.
+Las pruebas conservan los recorridos en español, inglés, italiano y portugués; validación de contacto y fechas; fotos PNG, JPEG y WebP procesadas localmente; navegación móvil; recarga y reinicio; ausencia de almacenamiento persistente y envío de datos personales; y exportación real de PDF y DOCX.
 
-Los documentos se inspeccionan con Poppler y mediante lectura de los archivos XML del DOCX. Se verifican caracteres acentuados, fotografía, texto largo completo, PDF de varias páginas, papel Carta, diseños de una y dos columnas y contenido editable de Word. También se comprueba que continuar conserve los borradores de habilidades e intereses y que las secciones personalizadas incompletas soliciten el campo que falta.
+Las comprobaciones del catálogo cargan sus 400 diseños mediante paginación, revisan 50 por tipo y prueban búsquedas sin distinción de mayúsculas ni acentos. El recorrido obligatorio sigue idioma → tipo → diseño → perfil → preguntas → revisión.
 
-Los nuevos escenarios comprueban el recorrido obligatorio idioma → tipo → diseño, tres diseños exclusivos por enfoque y descripciones traducidas. Cambiar entre los ocho tipos conserva respuestas y foto, modifica el orden en vista previa, PDF y Word, y presenta las fechas recientes primero sin alterar el orden de las entradas del formulario.
+La fuente seleccionada se conserva al cambiar de tipo o diseño y se aplica a texto, nombre y cabeceras. Poppler verifica las seis familias reales incrustadas en PDF y caracteres Unicode; el XML de Word declara la familia seleccionada en textos y estilos. Word puede sustituirla si no está instalada en el equipo del lector.
+
+Cambiar entre los ocho tipos conserva respuestas, foto y fuente, modifica el orden real en vista previa, PDF y Word, y presenta las entradas actuales y recientes primero sin alterar el formulario. Una prueba extensa de Lato, Prism Contact, Carta y 13 pt verifica los títulos completos de siete experiencias y cuatro proyectos en el PDF de varias páginas.
 
 ## Traducción: límite pendiente
 
-Se verificaron los tokenizadores reales de los idiomas admitidos, la preparación de los identificadores de destino, la ejecución CPU WebAssembly con un pequeño modelo ONNX oficial, la cancelación y la conservación de las respuestas originales ante un error de descarga. Las peticiones observadas contienen nombres de modelos, sin el texto del currículum.
+Se verificaron los tokenizadores reales, preparación de idiomas, ejecución CPU WebAssembly con un pequeño modelo ONNX oficial, cancelación y conservación de las respuestas originales ante errores de descarga. Las peticiones contienen nombres de modelos, sin texto del currículum.
 
-**La inferencia completa de traducción no se ha verificado:** el CDN de los pesos devolvió HTTP 403 por restricciones de red del entorno. Ejecutar un modelo ONNX pequeño demuestra que el runtime funciona, pero no demuestra la calidad ni la ejecución completa del traductor Marian. Es necesario probar esa función con acceso a los archivos de modelos y en dispositivos de destino.
+**La inferencia completa de traducción no se ha verificado:** el CDN de los pesos devolvió HTTP 403 por restricciones de red. La ejecución del modelo ONNX pequeño no demuestra la ejecución completa ni la calidad del traductor Marian. La interfaz, preguntas, guías y títulos del documento sí se verificaron en los cuatro idiomas.
 
-Cloudflare Pages, el dominio y la activación efectiva de AdSense se revisarán después de configurar las cuentas y los datos reales de producción.
+## Publicación
+
+El acceso a Cloudflare y la creación del proyecto Pages `cvonline` se verificaron mediante la API. La confirmación del despliegue se registra después de subir los archivos. El acceso HTTPS al dominio desde este entorno devolvió una denegación del proxy de red; ese resultado no acredita un fallo del sitio público.
+
+El dominio independiente y la activación de AdSense quedan para una etapa posterior con los datos reales de la cuenta. No se solicitó ni se obtuvo aprobación de Google.
