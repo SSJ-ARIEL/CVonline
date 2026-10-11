@@ -6,14 +6,14 @@ export default defineConfig({
     name: 'private-editor-document',
     transformIndexHtml(html, context) {
       // Match the production Pages rewrites during local development.
-      if (context.server && /^\/(?:language|cv-type|profile|review|builder)(?:\/|\?|$)/.test(context.originalUrl || context.path)) {
+      if (context.server && /^\/(?:editor(?:\.html)?|language|cv-type|profile|review|builder)(?:\/|\?|$)/.test(context.originalUrl || context.path)) {
         return html.replace(/<script\b(?=[^>]*\bid="adsense-verification")[^>]*>[\s\S]*?<\/script>/, '');
       }
       return html;
     },
     configurePreviewServer(server) {
       server.middlewares.use((request, _response, next) => {
-        if (/^\/(?:language|cv-type|profile|review|builder)(?:\/|\?|$)/.test(request.url || '')) request.url = '/editor.html';
+        if (/^\/(?:editor(?:\.html)?|language|cv-type|profile|review|builder)(?:\/|\?|$)/.test(request.url || '')) request.url = '/editor.html';
         next();
       });
     },

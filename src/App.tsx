@@ -14,7 +14,12 @@ import { StartLink } from './components/UI';
 import { CvTypePage } from './CvTypePage';
 
 export function stripLocale(path:string) { return path.replace(/^\/(?:es|en|it|pt)(?=\/|$)/,'')||'/'; }
-export function isEditorRoute(path:string,search='') {return ['/language','/cv-type','/profile','/review'].includes(path)||path.startsWith('/builder')||(path==='/templates'&&new URLSearchParams(search).get('step')==='design');}
+export function isEditorRoute(path:string,search='') {
+  // Pages adds a trailing slash to directory URLs such as /templates/. A design
+  // link must still open the clean editor document before mounting any form.
+  const route=path.replace(/\/+$/,'')||'/';
+  return ['/editor','/editor.html','/language','/cv-type','/profile','/review'].includes(route)||route.startsWith('/builder')||(route==='/templates'&&new URLSearchParams(search).get('step')==='design');
+}
 export function pageTitle(path:string,locale:Locale) {
   const route=stripLocale(path);const guide=route.startsWith('/guides/')?getGuides(locale).find(g=>g.slug===route.slice(8)):undefined;
   if(guide)return `${guide.title} — CVonline`;
@@ -45,5 +50,5 @@ export default function App() {
     <Route key={`${prefix}/guides/:slug`} path={`${prefix}/guides/:slug`} element={<GuidePage/>}/>,
     ...(['about','privacy','terms'] as const).map(kind=><Route key={`${prefix}/${kind}`} path={`${prefix}/${kind}`} element={<InformationPage kind={kind}/>}/>),
   ]);
-  return <div className={`app-shell ${editor?'editor-shell':''}`}><a className="skip-link" href="#main">{t(locale,'skip')}</a><RouteEffects/><Header/><Routes>{publicRoutes}<Route path="/language" element={<LanguagePage/>}/><Route path="/cv-type" element={<CvTypePage/>}/><Route path="/profile" element={<ProfilePage/>}/><Route path="/builder/:step" element={<WizardPage/>}/><Route path="/review" element={<ReviewPage/>}/><Route path="/builder" element={<Navigate to="/builder/personal" replace/>}/><Route path="*" element={<NotFound/>}/></Routes>{!editor&&<Advertising/>}<Footer/></div>;
+  return <div className={`app-shell ${editor?'editor-shell':''}`}><a className="skip-link" href="#main">{t(locale,'skip')}</a><RouteEffects/><Header/><Routes>{publicRoutes}<Route path="/editor" element={<Navigate to={`/language${location.search}`} replace/>}/><Route path="/editor.html" element={<Navigate to={`/language${location.search}`} replace/>}/><Route path="/language" element={<LanguagePage/>}/><Route path="/cv-type" element={<CvTypePage/>}/><Route path="/profile" element={<ProfilePage/>}/><Route path="/builder/:step" element={<WizardPage/>}/><Route path="/review" element={<ReviewPage/>}/><Route path="/builder" element={<Navigate to="/builder/personal" replace/>}/><Route path="*" element={<NotFound/>}/></Routes>{!editor&&<Advertising/>}<Footer/></div>;
 }

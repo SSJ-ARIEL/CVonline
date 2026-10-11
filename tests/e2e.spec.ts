@@ -340,6 +340,17 @@ test('public AdSense verification executes once and the editor starts in a clean
     body: 'window.__cvonlineVerificationTestRuns = (window.__cvonlineVerificationTestRuns || 0) + 1;',
   }));
   const verificationRuns = () => page.evaluate(() => (window as Window & { __cvonlineVerificationTestRuns?: number }).__cvonlineVerificationTestRuns);
+
+  // Recover the extensionless editor address left by older cached Pages redirects.
+  await page.goto('/editor?template=prism');
+  await expect(page).toHaveURL(/\/language\?template=prism$/);
+  await expect(page.getByRole('heading', { name: es.languageTitle, exact: true })).toBeVisible();
+  expect(await verificationRuns()).toBeUndefined();
+  await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
+  expect(googleRequests).toEqual([]);
+  await page.getByRole('button', { name: es.languageAction, exact: true }).click();
+  await expect(page).toHaveURL(/\/cv-type$/);
+
   await page.goto('/');
   await expect.poll(verificationRuns).toBe(1);
   expect(googleRequests).toEqual([verificationUrl]);
@@ -359,9 +370,11 @@ test('public AdSense verification executes once and the editor starts in a clean
   await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
   expect(googleRequests).toEqual([verificationUrl]);
 
-  for (const path of ['/profile', '/review', '/builder/personal']) {
-    const response = await page.request.get(path);
-    expect(response.ok()).toBe(true);
+  for (const path of ['/language', '/language?template=prism', '/cv-type', '/profile', '/review', '/builder', '/builder/personal']) {
+    // Pages must serve the editor at this URL, without canonicalizing editor.html.
+    const response = await page.request.get(path, { maxRedirects: 0 });
+    expect(response.status(), path).toBe(200);
+    expect(response.headers().location, path).toBeUndefined();
     const editorHtml = await response.text();
     expect(editorHtml).not.toContain('id="adsense-verification"');
     expect(editorHtml).not.toContain(verificationUrl);
@@ -780,9 +793,11 @@ test('type selection is translated and remains usable at 390px in all four langu
 });
 
 test('direct editor routes require language, then a CV type and a design', async ({ page }) => {
-  for (const path of ['/cv-type', '/templates?step=design', '/profile', '/builder/personal', '/review']) {
+  for (const path of ['/editor', '/editor.html', '/cv-type', '/templates?step=design', '/templates/?step=design', '/profile', '/builder/personal', '/review']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/language$/);
+    await expect(page.getByRole('heading', { name: es.languageTitle, exact: true })).toBeVisible();
+    await expect(page.locator('script[src*="adsbygoogle"], script[src*="googlesyndication"]')).toHaveCount(0);
   }
   await chooseLanguage(page);
   await page.evaluate(() => {

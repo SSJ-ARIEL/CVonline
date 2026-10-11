@@ -73,13 +73,20 @@ Los archivos `public/_redirects` y `public/_headers` se copian a `dist` y están
 - Las pantallas con datos personales no forman parte del sitemap y se marcan para evitar indexación.
 - El editor utiliza `Cache-Control: no-store`; las cabeceras también restringen acceso a cámara, micrófono y geolocalización y bloquean la inclusión de la web en un iframe.
 
-`_redirects` reescribe únicamente `/language`, `/cv-type`, `/profile`, `/review`, `/builder` y `/builder/*` hacia `/editor.html`, cuyo HTML no incluye AdSense. Las páginas públicas conservan su HTML prerenderizado con el fragmento de verificación. El enlace inicial al editor abre un documento nuevo; las URL antiguas `/templates?step=design` abren también un documento limpio antes de mostrar formularios. No se añade una regla global. No añadas `/* /index.html 200`: las reglas de redirección de Pages tienen prioridad incluso cuando existe un archivo y esa regla interceptaría las guías, JavaScript y WebAssembly. Tampoco añadas un `404.html` raíz sin configurar antes las rutas del editor.
+`_redirects` reescribe únicamente `/language`, `/cv-type`, `/profile`, `/review`, `/builder` y `/builder/*` hacia `/editor`, que sirve el archivo `editor.html` sin AdSense. El destino debe ser **sin extensión**: Pages redirige un destino `/editor.html` a `/editor`, cambia la ruta visible y rompe el inicio del formulario. Las páginas públicas conservan su HTML prerenderizado con el fragmento de verificación. El enlace inicial al editor abre un documento nuevo; las URL antiguas `/templates?step=design` abren también un documento limpio antes de mostrar formularios. Los accesos directos `/editor` y `/editor.html` recuperan la selección de idioma, conservando los parámetros. No se añade una regla global. No añadas `/* /index.html 200`: las reglas de redirección de Pages tienen prioridad incluso cuando existe un archivo y esa regla interceptaría las guías, JavaScript y WebAssembly. Tampoco añadas un `404.html` raíz sin configurar antes las rutas del editor.
 
 Referencias oficiales: [archivos y fallback SPA](https://developers.cloudflare.com/pages/configuration/serving-pages/) y [prioridad de redirecciones](https://developers.cloudflare.com/pages/configuration/redirects/).
 
 Cuando `VITE_SITE_URL` contiene un origen HTTPS válido, la compilación añade `dist/sitemap.xml`, su referencia en `robots.txt`, enlaces canónicos y alternativas de idioma. Comprueba los archivos del despliegue real antes de solicitar indexación.
 
 ## 6. Revisar el sitio publicado
+
+Para comprobar las redirecciones y cabeceras reales de Pages antes de publicar,
+compila y ejecuta `CI=true npm test -- --retries=0`. La suite utiliza Wrangler
+Pages en CI y no reutiliza un servidor Vite. Fuera de CI puedes seleccionarlo
+con `CVONLINE_TEST_CLOUDFLARE=true npm test`. Vite sigue disponible para las
+pruebas rápidas de desarrollo; sus respuestas no validan la normalización de
+URL que hace Cloudflare.
 
 Comprueba en escritorio y móvil:
 

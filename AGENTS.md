@@ -16,3 +16,9 @@ es `https://cvonline-zw0.pages.dev`. GitHub conserva el código; los despliegues
 utilizan Direct Upload. No crees otro proyecto para una actualización habitual.
 El propietario gestiona la verificación, revisión y demás acciones de sus cuentas
 de Google. Nunca guardes credenciales en el repositorio.
+
+Las reescrituras privadas de Pages deben apuntar a `/editor` sin extensión:
+`/editor.html` provoca una redirección canónica y cambia la URL del formulario.
+Valida las rutas con el servidor de Pages de Wrangler, además de los recorridos
+del navegador. `CI=true npm test -- --retries=0` lo utiliza automáticamente;
+`CVONLINE_TEST_CLOUDFLARE=true` también permite seleccionarlo fuera de CI.

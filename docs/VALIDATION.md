@@ -54,3 +54,32 @@ El `<head>` público incluye exactamente la URL `https://pagead2.googlesyndicati
 `editor.html` no contiene el script. Los rewrites de Cloudflare se limitan a las rutas privadas, y el arranque de una URL antigua de selección de diseño abre un documento limpio antes de mostrar formularios. El servidor de desarrollo y el preview reproducen esa separación.
 
 Para este cambio pasaron **cuatro pruebas seleccionadas, sin reintentos**: fragmento inicial público y ejecución única controlada; entrada al editor sin conservar el código externo; privacidad de respuestas, recarga y reinicio; recorrido Word en español y requisitos de las rutas privadas. El navegador de prueba sustituyó la respuesta de Google por un script controlado, sin contactar sus servidores. También se comprobó por HTTP el desarrollo: portada con el fragmento y lenguaje, perfil y formulario sin él.
+
+## Corrección del acceso «Crear mi CV» en Pages
+
+Se reprodujo el error con el servidor de Pages de Wrangler 4.149.0: la
+reescritura `/language /editor.html 200` devolvía en realidad una redirección
+canónica 308 a `/editor`. Esa URL no tenía ruta en React y mostraba «Esta página
+no está aquí». La vista previa Vite no reproducía ese comportamiento del host.
+
+Las reglas privadas apuntan ahora a `/editor` sin extensión. Las siete rutas
+del editor, incluidos parámetros de plantilla, devuelven HTTP 200 sin cambiar
+la URL, con HTML sin AdSense y cabeceras `no-store` y `noindex`. Los accesos
+`/editor` y `/editor.html` recuperan la pantalla de idioma y conservan parámetros
+para navegadores que hayan guardado la redirección anterior.
+
+También se corrigió la detección de enlaces de diseño cuando Pages normaliza
+`/templates` a `/templates/`. El arranque reconoce ambas variantes y abre el
+documento limpio antes de montar formularios.
+
+La compilación final pasó y `CI=true npm test -- --retries=0` completó **21
+pruebas aprobadas** sobre el servidor de Pages, sin fallos, omisiones ni
+reintentos automáticos en esa ejecución. La primera comprobación completa
+detectó el caso de la barra final; tras corregirlo se repitió la suite. Incluye
+cuestionario y Word en los cuatro idiomas, fotos, privacidad, PDF de varias
+páginas, seis fuentes, 400 diseños, móvil y recuperación de rutas directas.
+
+Se conservaron el HTML de Google byte por byte, el publisher y fragmento de
+AdSense, `ads.txt`, las 52 URL del sitemap, las cabeceras de privacidad y los
+diseños con fondos pastel. Las pruebas de CI usan Pages automáticamente para
+que la normalización de URL y las reescrituras no queden ocultas por Vite.

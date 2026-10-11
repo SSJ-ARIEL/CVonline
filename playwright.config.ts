@@ -1,6 +1,9 @@
 import { defineConfig } from '@playwright/test';
 import { existsSync } from 'node:fs';
 
+// CI verifies Pages' canonical redirects and headers, which Vite does not model.
+const useCloudflare = process.env.CVONLINE_TEST_CLOUDFLARE === 'true' || (Boolean(process.env.CI) && process.env.CVONLINE_TEST_CLOUDFLARE !== 'false');
+
 export default defineConfig({
   testDir: './tests',
   timeout: 60_000,
@@ -22,9 +25,18 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: 'npm run preview -- --port 5173 --strictPort',
+    command: useCloudflare
+      ? 'npm exec --yes --package=wrangler@4.149.0 -- wrangler pages dev dist --ip 127.0.0.1 --port 5173 --compatibility-date=2026-10-11'
+      : 'npm run preview -- --port 5173 --strictPort',
+    env: useCloudflare ? {
+      XDG_CONFIG_HOME: '/tmp/cvonline-routing-config',
+      NPM_CONFIG_CACHE: '/tmp/cvonline-npm-cache',
+      WRANGLER_LOG_PATH: '/tmp/cvonline-wrangler.log',
+      WRANGLER_SEND_METRICS: 'false',
+    } : undefined,
     url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
+    // A running Vite preview must never satisfy a Pages regression run.
+    reuseExistingServer: !process.env.CI && !useCloudflare,
     timeout: 60_000,
   },
 });

@@ -1,9 +1,11 @@
 # Public pages contain the owner's AdSense verification script. All initial
 # editor requests use a separate document without third-party scripts.
-/language /editor.html 200
-/cv-type /editor.html 200
-/profile /editor.html 200
-/review /editor.html 200
-/builder /editor.html 200
-/builder/* /editor.html 200
+# Use the extensionless destination: Pages redirects .html URLs to their
+# canonical URL even after a rewrite, which would change the editor route.
+/language /editor 200
+/cv-type /editor 200
+/profile /editor 200
+/review /editor 200
+/builder /editor 200
+/builder/* /editor 200
 # No catch-all rewrite: public pages and assets keep their original responses.
