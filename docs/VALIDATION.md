@@ -13,7 +13,9 @@ Las comprobaciones se realizaron con Node.js 24, npm, Chromium y Poppler. La com
 - Interfaz: 48 casos de tipo, catálogo y revisión en cuatro idiomas y anchos de 320, 390, 768 y 1440 px; 96 selecciones de fuente y cero errores o desbordamientos.
 - Exportaciones: 62 PDF y 62 Word, incluidos los ocho tipos, las seis fuentes, diez variantes y cuatro currículums extensos de 9–10 páginas. Se verificaron títulos, subtítulos, viñetas, textos y fotos.
 - Tipografías: 12 TTF estáticos y 12 WOFF2, pesos 400/700, permiso de incrustación, caracteres acentuados y símbolo del euro, equivalencia de contornos y hashes del manifiesto.
-- Configuración pública: 52 URL en el sitemap y enlaces canónicos con el dominio real; publicidad desactivada y sin `ads.txt`.
+- Configuración pública: 52 URL en el sitemap y enlaces canónicos con el dominio real; publicidad desactivada y sin identificadores de Google inventados.
+- Verificación Google: 260 comprobaciones de HTML en cinco configuraciones temporales; metadatos de Search Console, meta AdSense y `ads.txt` independientes de la activación de anuncios. Los identificadores de prueba no entraron al despliegue.
+- Runtime local: gzip de 3.695.787 bytes que recupera exactamente los 14.264.838 bytes originales, SHA-256 `06ba057753da3847e4c24f02d91ab133455b0817c69a44993a9a53a2146df9e3`. Siete escenarios de navegador aprobados, incluidos ambos tipos de hosting, rechazos de archivos inválidos y una inferencia CPU real mediante la API pública de Transformers.js con un modelo Identity. Cero peticiones externas y cero violaciones del CSP del editor.
 - Galería HTML independiente: 18 capturas actuales de escritorio y móvil; todas las imágenes decodifican, funciona sin solicitudes HTTP y no desborda a 320 px.
 
 ## Cobertura del navegador
@@ -34,8 +36,12 @@ Se verificaron los tokenizadores reales, preparación de idiomas, ejecución CPU
 
 ## Publicación
 
-El acceso a Cloudflare y la creación del proyecto Pages `cvonline` se verificaron mediante la API. **El sitio todavía no está publicado: el proyecto tiene cero despliegues.** El proxy del entorno rechazó la carga del archivo WASM con HTTP 401 y el mensaje de autenticación de la integración `codex-secret-api.cloudflare.com`. Dos lotes pequeños fueron aceptados; también falló el WASM aislado (14.26 MB original y aproximadamente 19.02 MB en base64). Una comprobación no mutante de transporte gzip devolvió HTTP 400. No se deshabilitaron comprobaciones ni se omitieron recursos del build.
+**Cloudflare confirmó el despliegue de producción el 11 de octubre de 2026** en https://cvonline-zw0.pages.dev. Identificador: `776dea4c-7145-46df-844a-2933342fc421`; estado de la etapa `deploy`: `success`; rama `main`; commit `e93bb80c5b7348d130b6b7e1d1df01a765fb7944`. URL individual: https://776dea4c.cvonline-zw0.pages.dev.
 
-La publicación requiere subir el ZIP completo desde el panel de Cloudflare siguiendo [las instrucciones](CLOUDFLARE.md#subir-el-zip-desde-el-panel). Las credenciales ya autenticaron operaciones; este bloqueo no justifica solicitar otro token. El acceso HTTPS al dominio desde el entorno también está restringido por el proxy. Tras el despliegue manual deben comprobarse el acceso público y los recursos en la dirección asignada.
+Wrangler cargó correctamente los 232 archivos estáticos, `_headers` y `_redirects`. El archivo grande que antes bloqueaba el transporte se distribuye ahora comprimido y se descomprime en memoria con las API oficiales. No se eliminaron funciones ni se deshabilitaron verificaciones de transporte o integridad.
 
-El dominio independiente y la activación de AdSense quedan para una etapa posterior con los datos reales de la cuenta. No se solicitó ni se obtuvo aprobación de Google.
+La suite final `CI=true npm test -- --retries=0` completó **20 pruebas aprobadas, cero fallidas, omitidas o reintentadas**. Se corrigió una carrera en la prueba del catálogo: el conteo de guías ahora espera su renderizado después de navegar. La aplicación conserva sus seis guías por idioma.
+
+Las peticiones HTTPS desde este entorno al dominio público devolvieron HTTP 403 y `error code: 1010`, incluso antes del despliegue. La API confirma la publicación, pero esta respuesta no permite dar por comprobado el acceso público desde un navegador externo. Las pruebas funcionales de producción se completaron en el entorno local.
+
+**AdSense y Search Console no se han dado de alta ni verificado en una cuenta de Google.** El soporte técnico de los metadatos está listo, pero faltan los códigos reales, los datos públicos de contacto y el acceso a los paneles. La publicidad permanece desactivada. El dominio gratuito puede presentarse como sitio en AdSense porque `pages.dev` aparece en la Public Suffix List; la aprobación la decide Google.

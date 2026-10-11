@@ -107,7 +107,7 @@ docs/                     Publicación y privacidad
 
 ## Publicación y monetización
 
-El código permanece en GitHub y la web se prepara para Cloudflare Pages, con una dirección gratuita `*.pages.dev`. La disponibilidad del nombre `cvonline.pages.dev` no se ha comprobado. Un dominio propio puede conectarse después sin cambiar de repositorio.
+El código permanece en GitHub y la web está desplegada en Cloudflare Pages: **https://cvonline-zw0.pages.dev**. Cloudflare confirmó el despliegue de producción; el entorno de desarrollo recibe HTTP 403 al intentar acceder al dominio público, por lo que esa comprobación externa sigue pendiente. Un dominio propio puede conectarse después sin cambiar de repositorio.
 
 **No se carga publicidad con la configuración predeterminada.** La integración prevista se limita a las páginas públicas. Activar el cargador de AdSense requiere la aprobación de Google, identificación del responsable y contacto, y la configuración de una plataforma de consentimiento certificada cuando corresponda. El cuadro de elección incluido en la interfaz no sustituye esa plataforma. No se garantiza aprobación ni ingresos con un subdominio o dominio propio.
 
