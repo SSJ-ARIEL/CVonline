@@ -25,7 +25,7 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
   const accent = /^[\da-f]{6}$/i.test(settings.accent.replace(/^#/, ''))
     ? settings.accent.replace(/^#/, '').toUpperCase()
     : template.accent.replace(/^#/, '').toUpperCase();
-  const inkAccent = accentInkColor(`#${accent}`).slice(1).toUpperCase();
+  const inkAccent = accentInkColor(`#${accent}`,template.pageBackground).slice(1).toUpperCase();
   const pointSize = safeFontSize(settings.fontSize);
   const bodySize = Math.round(pointSize * 2);
   const centered = template.header === 'center' || variant === 'centered-labels';
@@ -160,6 +160,7 @@ export async function createDocxBlob(data: ResumeData, settings: ResumeSettings)
   }
 
   const document = new Document({
+    background: { color: template.pageBackground.slice(1).toUpperCase() },
     creator: 'CVonline',
     title: data.personal.name ? `${labels.profile} — ${clean(data.personal.name)}` : 'CVonline',
     description: 'CVonline',

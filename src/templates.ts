@@ -1,7 +1,7 @@
 import type { CvType, TemplateDefinition, TemplateLayoutVariant } from './model';
 
 /** Original CVonline compositions: no university endorsement or official Europass artwork. */
-const FOUNDATIONS: Omit<TemplateDefinition, 'layoutVariant'>[] = [
+const FOUNDATIONS: Omit<TemplateDefinition, 'layoutVariant' | 'pageBackground'>[] = [
   // Harvard-inspired: restrained typography, generous margins, readable rules.
   {id:'folio',name:'Cambridge',cvTypes:['harvard'],treatment:'formal',family:'classic',columns:1,accent:'#262626',font:'serif',header:'center',density:'comfortable',sectionStyle:'line'},
   {id:'quincy',name:'Quincy',cvTypes:['harvard'],treatment:'frame',family:'classic',columns:1,accent:'#30343b',font:'serif',header:'left',density:'comfortable',sectionStyle:'caps'},
@@ -69,11 +69,15 @@ const EDITIONS: {id: TemplateLayoutVariant; name: string; sidebarWidth?:25|29|33
 // Forty original foundations, ten structural editions each: fifty per CV type.
 // Standard IDs stay stable so existing selections and shared links keep working.
 const COLLECTION_TYPES = [...new Set(FOUNDATIONS.flatMap(foundation => foundation.cvTypes))];
-export const TEMPLATES: TemplateDefinition[] = COLLECTION_TYPES.flatMap(type => EDITIONS.flatMap(edition => FOUNDATIONS.filter(foundation => foundation.cvTypes.includes(type)).map(foundation => ({
+// Eight light paper tones and two white slots keep forty pastel and ten classic
+// white designs in each collection. Geometry, accents and existing IDs stay put.
+const PAPER_BACKGROUNDS = ['#ffffff','#fbe8ed','#e8f0fb','#eee8f8','#e7f3ee','#ffffff','#faf0de','#faeadd','#ebeff4','#edf3e4'];
+export const TEMPLATES: TemplateDefinition[] = COLLECTION_TYPES.flatMap(type => EDITIONS.flatMap((edition,editionIndex) => FOUNDATIONS.filter(foundation => foundation.cvTypes.includes(type)).map((foundation,foundationIndex) => ({
   ...foundation,
   id:edition.id==='standard' ? foundation.id : `${foundation.id}--${edition.id}`,
   name:edition.name ? `${foundation.name} ${foundation.name===edition.name ? (edition.id==='date-column'?'Sequence':'Reference') : edition.name}` : foundation.name,
   layoutVariant:edition.id,
+  pageBackground:PAPER_BACKGROUNDS[(foundationIndex+editionIndex*3)%PAPER_BACKGROUNDS.length],
   ...(edition.sidebarWidth && foundation.columns===2 ? {sidebarWidth:edition.sidebarWidth} : {}),
   ...(edition.pageInset ? {pageInset:edition.pageInset} : {}),
 }))));
@@ -92,8 +96,8 @@ export function accentTextColor(accent: string): '#ffffff' | '#000000' {
   return luminance > 0.179 ? '#000000' : '#ffffff';
 }
 
-/** Keep accent text readable on white, including white/neon custom accents. */
-export function accentInkColor(accent: string): string {
+/** Keep accent text readable on the selected paper, including neon accents. */
+export function accentInkColor(accent: string, background = '#ffffff'): string {
   const hex = /^#[\da-f]{6}$/i.test(accent) ? accent : '#244b52';
   const rgb = [1,3,5].map(offset => parseInt(hex.slice(offset,offset+2),16));
   const luminance = (factor: number) => rgb.reduce((total,channel,index) => {
@@ -101,12 +105,18 @@ export function accentInkColor(accent: string): string {
     const linear = scaled <= 0.04045 ? scaled/12.92 : ((scaled+0.055)/1.055)**2.4;
     return total + linear * [0.2126,0.7152,0.0722][index];
   },0);
-  // White against 0.18 luminance has a contrast ratio above 4.5:1.
-  if (luminance(1) <= 0.18) return hex;
+  const paper = /^#[\da-f]{6}$/i.test(background) ? background : '#ffffff';
+  const paperLuminance = [1,3,5].reduce((total,offset,index) => {
+    const channel = parseInt(paper.slice(offset,offset+2),16)/255;
+    const linear = channel <= 0.04045 ? channel/12.92 : ((channel+0.055)/1.055)**2.4;
+    return total + linear * [0.2126,0.7152,0.0722][index];
+  },0);
+  const limit = Math.min(0.18,(paperLuminance+0.05)/4.5-0.05);
+  if (luminance(1) <= limit) return hex;
   let low = 0, high = 1;
   for (let iteration=0;iteration<16;iteration++) {
     const midpoint = (low+high)/2;
-    if (luminance(midpoint)>0.18) high=midpoint; else low=midpoint;
+    if (luminance(midpoint)>limit) high=midpoint; else low=midpoint;
   }
   return `#${rgb.map(channel=>Math.floor(channel*low).toString(16).padStart(2,'0')).join('')}`;
 }

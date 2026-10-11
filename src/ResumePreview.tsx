@@ -38,7 +38,8 @@ export function ResumePreview({data,settings,compact=false}:ResumePreviewProps) 
   const font = getResumeFont(settings.fontFamily,template.font);
   const style = {
     '--resume-accent':accent,
-    '--resume-ink-accent':accentInkColor(accent),
+    '--resume-paper-background':template.pageBackground,
+    '--resume-ink-accent':accentInkColor(accent,template.pageBackground),
     '--resume-accent-text':accentTextColor(accent),
     '--resume-font-size':`${safeFontSize(settings.fontSize)}pt`,
     '--resume-font-family':font.fontCSS,

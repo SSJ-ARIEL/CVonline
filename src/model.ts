@@ -66,6 +66,7 @@ export interface TemplateDefinition {
   family: 'classic' | 'modern' | 'executive' | 'creative' | 'academic' | 'technical';
   columns: 1 | 2;
   accent: string;
+  pageBackground: string;
   font: 'sans' | 'serif';
   header: 'left' | 'center' | 'band' | 'split' | 'minimal';
   density: 'compact' | 'comfortable';

@@ -116,6 +116,19 @@ async function getDownload(page: Page, label: string, fileName: string, testInfo
   return output;
 }
 
+async function expectPdfPaperColor(pdfPath: string, pageNumber: number, color: string, testInfo: TestInfo) {
+  // Render a single margin pixel, away from content and colored side rails.
+  const output = testInfo.outputPath(`paper-${pageNumber}`);
+  execFileSync('pdftoppm', ['-f', String(pageNumber), '-l', String(pageNumber), '-r', '72', '-x', '300', '-y', '8', '-W', '1', '-H', '1', '-singlefile', pdfPath, output]);
+  const ppm = await readFile(`${output}.ppm`);
+  const header = /^P6\s+1\s+1\s+255\s/.exec(ppm.subarray(0, 64).toString('ascii'));
+  if (!header) throw new Error('Expected a one-pixel RGB PPM from the exported PDF.');
+  const expected = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16));
+  for (let channel = 0; channel < 3; channel++) {
+    expect(Math.abs(ppm[header[0].length + channel] - expected[channel]), `PDF page ${pageNumber} paper channel ${channel}`).toBeLessThanOrEqual(2);
+  }
+}
+
 async function loadDesignCollection(page: Page, expectedCount: number) {
   while (await page.locator('.template-card').count() < expectedCount) {
     const previousCount = await page.locator('.template-card').count();
@@ -237,12 +250,18 @@ test('PDF and Word retain Unicode, photo, long text and configurable page size',
   expect(images).toMatch(/\bimage\b/);
   // Two-column PDFs must retain both long main content and the side column.
   await page.locator('#review-template').selectOption('prism');
+  await expect(page.locator('.preview-viewport article')).toHaveCSS('background-color', 'rgb(251, 232, 237)');
   const twoColumnPdf = await getDownload(page, es.downloadPdf, 'resume-two-columns.pdf', testInfo);
   const twoColumnText = execFileSync('pdftotext', [twoColumnPdf, '-'], { encoding: 'utf8' });
   expect(twoColumnText).toContain(fullName);
   expect(twoColumnText).toContain('Último resultado: São Paulo, año 2026.');
   expect(twoColumnText).toContain('Acessibilidade');
   expect(twoColumnText).toContain('maria.private@example.com');
+  const twoColumnInfo = execFileSync('pdfinfo', [twoColumnPdf], { encoding: 'utf8' });
+  const pages = Number(/Pages:\s+(\d+)/.exec(twoColumnInfo)?.[1]);
+  expect(pages).toBeGreaterThan(1);
+  await expectPdfPaperColor(twoColumnPdf, 1, '#fbe8ed', testInfo);
+  await expectPdfPaperColor(twoColumnPdf, pages, '#fbe8ed', testInfo);
   const docxPath = await getDownload(page, es.downloadWord, 'resume-unicode.docx', testInfo);
   const files = unzipSync(await readFile(docxPath));
   const xml = strFromU8(files['word/document.xml']);
@@ -250,6 +269,8 @@ test('PDF and Word retain Unicode, photo, long text and configurable page size',
   expect(xml).toContain('Último resultado: São Paulo, año 2026.');
   expect(xml).toContain('<w:t');
   expect(xml).toContain('<w:drawing>');
+  expect(xml).toMatch(/<w:background\b[^>]*w:color="FBE8ED"/i);
+  expect(strFromU8(files['word/settings.xml'])).toMatch(/<w:displayBackgroundShape\b/);
   expect(xml).toContain('w:w="12240"');
   expect(Object.keys(files).filter(name => /^word\/media\/.*\.(?:jpg|png)$/.test(name))).toHaveLength(1);
   await page.getByRole('checkbox', { name: es.photoShow, exact: true }).uncheck();
@@ -374,15 +395,46 @@ test('all 400 unique designs, type filters and public information are reachable'
     await expect(page.locator('.template-card')).toHaveCount(12);
     await expect(page.locator('.template-count')).toHaveText('50 diseños');
     await loadDesignCollection(page, 50);
-    const designs = await page.locator('.template-card').evaluateAll(cards => cards.map(card => ({
-      id: card.getAttribute('data-template-id')!,
-      name: card.querySelector('.template-info h2')!.textContent!,
-      type: card.getAttribute('data-template-cv-type'),
-    })));
+    const designs = await page.locator('.template-card').evaluateAll(cards => cards.map(card => {
+      const paper = card.querySelector('.resume-page')!;
+      const background = getComputedStyle(paper).backgroundColor;
+      const luminance = (color: string) => {
+        const channels = color.match(/[\d.]+/g)!.slice(0, 3).map(channel => Number(channel) / 255);
+        return channels.reduce((sum, channel, index) => sum + (channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4) * [.2126, .7152, .0722][index], 0);
+      };
+      const contrasts = [...paper.querySelectorAll('.resume-body-text, .resume-headline, h2, .resume-subtitle')].map(element => {
+        // Include panel/header/rail text against its nearest opaque background.
+        let backdropColor = background;
+        for (let ancestor: Element | null = element; ancestor; ancestor = ancestor.parentElement) {
+          const fill = getComputedStyle(ancestor).backgroundColor;
+          const channels = fill.match(/[\d.]+/g)?.map(Number) ?? [];
+          if (channels.length === 3 || channels[3] === 1) {
+            backdropColor = fill;
+            break;
+          }
+          if (ancestor === paper) break;
+        }
+        const foreground = luminance(getComputedStyle(element).color);
+        const backdrop = luminance(backdropColor);
+        return (Math.max(foreground, backdrop) + .05) / (Math.min(foreground, backdrop) + .05);
+      });
+      return {
+        id: card.getAttribute('data-template-id')!,
+        name: card.querySelector('.template-info h2')!.textContent!,
+        type: card.getAttribute('data-template-cv-type'),
+        background,
+        contrasts,
+      };
+    }));
+    expect(designs.filter(design => design.background === 'rgb(255, 255, 255)')).toHaveLength(10);
+    expect(designs.filter(design => design.background !== 'rgb(255, 255, 255)')).toHaveLength(40);
+    expect(new Set(designs.map(design => design.background)).size).toBe(9);
     for (const design of designs) {
       expect(design.type).toBe(cvType);
       expect(ids.has(design.id), `Repeated design ID ${design.id}`).toBe(false);
       expect(names.has(design.name), `Repeated design name ${design.name}`).toBe(false);
+      expect(design.contrasts.length, `No preview text checked for ${design.id}`).toBeGreaterThan(0);
+      for (const contrast of design.contrasts) expect(contrast, `Unreadable preview text in ${design.id}`).toBeGreaterThanOrEqual(4.5);
       ids.add(design.id);
       names.add(design.name);
     }

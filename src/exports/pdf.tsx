@@ -23,7 +23,7 @@ function ResumePdf({data,settings}: {data:ResumeData;settings:ResumeSettings}) {
   const sections = resumeSections(data,settings);
   const contacts = contactItems(data);
   const accent = safeAccent(settings.accent,template.accent);
-  const inkAccent = accentInkColor(accent);
+  const inkAccent = accentInkColor(accent,template.pageBackground);
   const fontSize = safeFontSize(settings.fontSize);
   const font = registerResumeFont(settings, template.font);
   const fontFamily = font.fontPdfFamily;
@@ -50,7 +50,7 @@ function ResumePdf({data,settings}: {data:ResumeData;settings:ResumeSettings}) {
   const tintedSidebar = isPortfolio || (isBand && template.columns===2);
   const sidebarFill = isPortfolio ? '#f3eef0' : template.id==='canvas' ? '#f7f1ed' : '#f4f2ed';
   const styles = StyleSheet.create({
-    page:{paddingTop:36,paddingBottom:36,paddingHorizontal:isRail?0:inset,fontFamily,fontSize,lineHeight:template.density==='compact'?1.36:1.48,color:'#28313b'},
+    page:{paddingTop:36,paddingBottom:36,paddingHorizontal:isRail?0:inset,fontFamily,fontSize,lineHeight:template.density==='compact'?1.36:1.48,color:'#28313b',backgroundColor:template.pageBackground},
     frame:{position:'absolute',top:20,bottom:20,left:21,right:21,borderWidth:.7,borderColor:accent},
     railBackground:{position:'absolute',top:0,bottom:0,width:sidebarWidth,backgroundColor:accent,...(template.sidebar==='right'?{right:0}:{left:0})},
     header:{flexDirection:'row',alignItems:isPortfolio||treatment==='editorial'?'flex-start':'center',justifyContent:'space-between',paddingBottom:isBand?32:isFormal?15:19,marginBottom:isFormal?18:22,borderBottomWidth:isBand?0:isPortfolio||isFormal||isRail?1:template.header==='minimal'||template.header==='split'||treatment==='editorial'?0:1.5,borderBottomColor:accent,...(isBand?{backgroundColor:headerColor,paddingTop:32,paddingHorizontal:40.5,marginTop:-36,marginHorizontal:-40.5}:{}),...(template.header==='split'&&!isPortfolio?{borderLeftWidth:4,borderLeftColor:accent,paddingLeft:16}:{}),...(treatment==='editorial'?{borderTopWidth:.75,borderTopColor:accent,paddingTop:20}:{}),},
@@ -69,12 +69,12 @@ function ResumePdf({data,settings}: {data:ResumeData;settings:ResumeSettings}) {
     sidebarHeading:{color:sidebarHeadingColor,borderBottomColor:isRail?(darkSidebar?'#ffffff55':'#18212d55'):'#dce2e7'},
     entry:{marginBottom:template.density==='compact'?9:12},
     timelineEntry:{borderLeftWidth:.8,borderLeftColor:'#d7dfe4',paddingLeft:13,marginLeft:3},
-    timelineDot:{position:'absolute',top:3,left:-3.3,width:5.5,height:5.5,borderRadius:3,backgroundColor:inkAccent},
+    timelineDot:{position:'absolute',top:3,left:-3.3,width:5.5,height:5.5,borderRadius:3,backgroundColor:accentInkColor(accent)},
     projectCard:{borderWidth:.65,borderColor:accent,padding:12,backgroundColor:'#fbfcfc'},
     editorialSummary:{paddingVertical:12,paddingHorizontal:14,borderLeftWidth:2.25,borderLeftColor:accent,backgroundColor:template.id==='muse'?'#f6f1f4':'#f7f5f2'},
     ledgerContent:{marginLeft:34.5},
     title:{fontFamily:boldFont,fontSize,color:'#1b2732',marginBottom:2},
-    date:{fontSize:fontSize-1.5,color:'#626e78',marginBottom:4},
+    date:{fontSize:fontSize-1.5,color:accentInkColor('#626e78',template.pageBackground),marginBottom:4},
     subtitle:{fontSize:fontSize-.6,color:'#58636d',marginBottom:4},
     sideBody:{color:sidebarColor},
     sideTitle:{color:isRail?railTextColor:'#1b2732'},

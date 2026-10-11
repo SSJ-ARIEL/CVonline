@@ -2,12 +2,13 @@
   --resume-accent:#245d69;
   --resume-ink-accent:#245d69;
   --resume-accent-text:#fff;
+  --resume-paper-background:#fff;
   --resume-font-size:10pt;
   box-sizing:border-box;
   width:794px;
   min-height:1123px;
   padding:52px 54px;
-  background:#fff;
+  background:var(--resume-paper-background);
   color:#28313b;
   font:var(--resume-font-size)/1.5 'DM Sans',Arial,sans-serif;
   text-align:left;
